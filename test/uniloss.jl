@@ -6,6 +6,14 @@ using DualNumbers
 ### auxiliary functions
 
 function verify_uniloss(loss::UnivariateLoss, f, u::Float64, y::Real)
+    # verify inferred types
+    for VT in [Float64, Float32]
+        @test Base.return_types(value, (typeof(loss), VT, VT)) == [VT]
+        @test Base.return_types(deriv, (typeof(loss), VT, VT)) == [VT]
+        @test Base.return_types(value_and_deriv, (typeof(loss), VT, VT)) == [(VT, VT)]
+    end
+
+    # verify computation correctness
     r = f(dual(u, 1.0), y)
     v_r = real(r)
     dv_r = epsilon(r)
