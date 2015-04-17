@@ -29,15 +29,25 @@ end
 
 # AbsLoss
 
-_absf(u::Dual, y) = real(u) > y ? u - y :
-                    real(u) < y ? y - u : dual(0.0, 0.0)
+_abs(u::Dual) = real(u) == 0.0 ? dual(0.0, 0.0) : abs(u)
 
-verify_uniloss(AbsLoss(), _absf, -3.0:3.0, -1.0:0.5:1.0)
+verify_uniloss(AbsLoss(),
+    (p, y) -> _abs(p - y), -3.0:3.0, -1.0:0.5:1.0)
 
 # SqrLoss
 
 verify_uniloss(SqrLoss(),
     (p, y) -> abs2(p - y) / 2, -3.0:3.0, -1.0:0.5:1.0)
+
+# HuberLoss
+
+function _huberf(t::Float64, u::Dual, y)
+    a = abs(real(u) - y)
+    a > t ? t * _abs(u - y) - 0.5 * t^2 : 0.5 * abs2(u - y)
+end
+
+verify_uniloss(HuberLoss(0.3), (p, y) -> _huberf(0.3, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
+verify_uniloss(HuberLoss(0.5), (p, y) -> _huberf(0.5, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
 
 
 # HingeLoss

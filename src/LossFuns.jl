@@ -12,6 +12,7 @@ export
 
     AbsLoss,
     SqrLoss,
+    HuberLoss,
     HingeLoss,
     LogisticLoss,
     MultiLogisticLoss,

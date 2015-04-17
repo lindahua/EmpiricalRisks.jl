@@ -3,7 +3,7 @@
 #
 #   loss(p, y) = |p - y|
 #
-type AbsLoss <: UnivariateLoss
+immutable AbsLoss <: UnivariateLoss
 end
 
 value{T<:BlasReal}(::AbsLoss, p::T, y::T) = abs(p - y)
@@ -15,7 +15,7 @@ value_and_deriv{T<:BlasReal}(::AbsLoss, p::T, y::T) = (r = p - y; (abs(r), sign(
 #
 #   loss(p, y) := (1/2) * (p - y)^2
 #
-type SqrLoss <: UnivariateLoss
+immutable SqrLoss <: UnivariateLoss
 end
 
 value{T<:BlasReal}(::SqrLoss, p::T, y::T) = half(abs2(p - y))
@@ -23,11 +23,47 @@ deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = p - y
 value_and_deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = (r = p - y; v = half(abs2(r)); (v, r))
 
 
+## Huber loss (for regression, smoothed version of Abs loss)
+#
+#   loss(p, y) := (1/2) * (p - y)^2      ... (|p - y| <= t)
+#                 t * |p - y| - t^2/2    ... otherwise
+#
+immutable HuberLoss <: UnivariateLoss
+    t::Float64
+
+    function HuberLoss(t::Real)
+        t > zero(t) || error("t must be a positive value.")
+        new(convert(Float64, t))
+    end
+end
+
+function value{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    a = abs(p - y)
+    a <= t ? half(a * a) : t * a - half(t * t)
+end
+
+function deriv{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    r = p - y
+    r > t ? t : r < -t ? -t : r
+end
+
+function value_and_deriv{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    r = p - y
+    r > t ? (t * r - half(t * t), t) :
+    r < -t ? (-t * r - half(t * t), -t) :
+    (half(r * r), r)
+end
+
+
+
 ## Hinge loss (for SVM)
 #
 #   loss(p, y) := max(1 - y * p, 0)
 #
-type HingeLoss <: UnivariateLoss
+immutable HingeLoss <: UnivariateLoss
 end
 
 value{T<:BlasReal}(::HingeLoss, p::T, y::T) = nonneg(one(T) - y * p)
@@ -43,7 +79,7 @@ end
 #
 #   loss(p, y) := log(1 + exp(-y * p))
 #
-type LogisticLoss <: UnivariateLoss
+immutable LogisticLoss <: UnivariateLoss
 end
 
 value{T<:BlasReal}(::LogisticLoss, p::T, y::T) =
@@ -84,7 +120,7 @@ end
 #   loss(p, y) := log(sum_k exp(p[k])) - p[y]
 #
 
-type MultiLogisticLoss <: MultivariateLoss
+immutable MultiLogisticLoss <: MultivariateLoss
 end
 
 function value{T<:BlasReal}(::MultiLogisticLoss, p::StridedVector{T}, y::Integer)
