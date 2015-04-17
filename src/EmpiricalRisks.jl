@@ -11,6 +11,7 @@ export
 
     AbsLoss,
     SqrLoss,
+    QuantileLoss,
     HuberLoss,
     HingeLoss,
     SmoothedHingeLoss,

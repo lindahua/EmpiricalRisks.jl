@@ -47,6 +47,17 @@ verify_uniloss(AbsLoss(),
 verify_uniloss(SqrLoss(),
     (p, y) -> abs2(p - y) / 2, -3.0:3.0, -1.0:0.5:1.0)
 
+# QuantileLoss
+
+function _quanlossf(t::Float64, u::Dual, y)
+    real(u) > y ? t * (u - y) :
+    real(u) < y ? (1.0 - t) * (y - u) :
+    dual(0.0, 0.0)
+end
+
+verify_uniloss(QuantileLoss(0.3), (p, y) -> _quanlossf(0.3, p, y), -2.0:0.5:2.0, -1.0:0.5:1.0)
+verify_uniloss(QuantileLoss(0.5), (p, y) -> _quanlossf(0.5, p, y), -2.0:0.5:2.0, -1.0:0.5:1.0)
+
 # HuberLoss
 
 function _huberf(h::Float64, u::Dual, y)

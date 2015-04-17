@@ -23,6 +23,44 @@ deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = p - y
 value_and_deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = (r = p - y; v = half(abs2(r)); (v, r))
 
 
+## Quantile loss (for quantile regression, asymmetric version of Abs loss)
+#
+#   loss(p, y) := t * (p - y)         ... (p >= y)
+#               = (1 - t) * (y - p)   ... (p < y)
+#
+immutable QuantileLoss <: UnivariateLoss
+    t::Float64
+
+    function QuantileLoss(t::Real)
+        zero(t) < t < one(t) || error("t must be a real value in (0, 1).")
+        new(convert(Float64, t))
+    end
+end
+
+function value{T<:BlasReal}(loss::QuantileLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    p >= y ? t * (p - y) : (one(T) - t) * (y - p)
+end
+
+function deriv{T<:BlasReal}(loss::QuantileLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    p > y ? t :
+    p < y ? t - one(T) : zero(T)
+end
+
+function value_and_deriv{T<:BlasReal}(loss::QuantileLoss, p::T, y::T)
+    t = convert(T, loss.t)
+    if p > y
+        (t * (p - y), t)
+    elseif p < y
+        c = t - one(T)
+        (c * (p - y), c)
+    else
+        (zero(T), zero(T))
+    end
+end
+
+
 ## Huber loss (for regression, smoothed version of Abs loss)
 #
 #   loss(p, y) := (1/2) * (p - y)^2      ... (|p - y| <= h)
