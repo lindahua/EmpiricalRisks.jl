@@ -5,13 +5,25 @@ import Base.LinAlg: BlasReal
 
 export
 
+    # loss.jl
     Loss,
     UnivariateLoss,
     MultivariateLoss,
 
+    AbsLoss,
+    SqrLoss,
+    HingeLoss,
+    LogisticLoss,
+    MultiLogisticLoss,
+
+    value,
+    deriv,
+    value_and_deriv,
+
+    # prediction.jl
     PredictionModel,
     UnivariatePredictionModel,
-    MultivariatePredictionModel,
+    MultivariatePredictionModel
 
 
 

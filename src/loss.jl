@@ -1,13 +1,26 @@
 
-## Squared loss (for linear regression)
+## Abs loss (for regression)
+#
+#   loss(p, y) = |p - y|
+#
+type AbsLoss <: UnivariateLoss
+end
+
+value{T<:BlasReal}(::AbsLoss, p::T, y::T) = abs(p - y)
+deriv{T<:BlasReal}(::AbsLoss, p::T, y::T) = sign(p - y)
+value_and_deriv{T<:BlasReal}(::AbsLoss, p::T, y::T) = (r = p - y; (abs(r), sign(r)))
+
+
+## Squared loss (for regression)
 #
 #   loss(p, y) := (1/2) * (p - y)^2
 #
 type SqrLoss <: UnivariateLoss
 end
 
-value{T<:BlasReal}(::SqrLoss, u::T, v::T) = half(abs2(u - v))
-value_and_deriv{T<:BlasReal}(::SqrLoss, u::T, y::T) = (r = u - y; v = half(abs2(r)); (v, r))
+value{T<:BlasReal}(::SqrLoss, p::T, y::T) = half(abs2(p - y))
+deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = p - y
+value_and_deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = (r = p - y; v = half(abs2(r)); (v, r))
 
 
 ## Hinge loss (for SVM)
