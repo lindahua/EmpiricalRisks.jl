@@ -1,10 +1,13 @@
 module EmpiricalRisks
 
+using ArrayViews
+
 import Base.LinAlg: BlasReal
 
 export
 
-    # loss.jl
+    ## loss.jl
+
     Loss,
     UnivariateLoss,
     MultivariateLoss,
@@ -26,10 +29,18 @@ export
     value_and_grad,
     value_and_grad!,
 
-    # prediction.jl
+    ## prediction.jl
+
     PredictionModel,
     UnivariatePredictionModel,
-    MultivariatePredictionModel
+    MultivariatePredictionModel,
+    LinearPred,
+    MvLinearPred,
+    AffinePred,
+    MvAffinePred,
+
+    nsamples,
+    predict
 
 
 

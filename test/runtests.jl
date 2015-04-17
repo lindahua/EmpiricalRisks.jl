@@ -1,6 +1,7 @@
 tests = [
-    "uniloss"
-    "multiloss"
+    "uniloss",
+    "multiloss",
+    "prediction"
 ]
 
 
