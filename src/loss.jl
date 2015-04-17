@@ -25,35 +25,35 @@ value_and_deriv{T<:BlasReal}(::SqrLoss, p::T, y::T) = (r = p - y; v = half(abs2(
 
 ## Huber loss (for regression, smoothed version of Abs loss)
 #
-#   loss(p, y) := (1/2) * (p - y)^2      ... (|p - y| <= t)
-#                 t * |p - y| - t^2/2    ... otherwise
+#   loss(p, y) := (1/2) * (p - y)^2      ... (|p - y| <= h)
+#                 h * |p - y| - h^2/2    ... otherwise
 #
 immutable HuberLoss <: UnivariateLoss
-    t::Float64
+    h::Float64
 
-    function HuberLoss(t::Real)
-        t > zero(t) || error("t must be a positive value.")
-        new(convert(Float64, t))
+    function HuberLoss(h::Real)
+        h > zero(h) || error("h must be a positive value.")
+        new(convert(Float64, h))
     end
 end
 
 function value{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
-    t = convert(T, loss.t)
+    h = convert(T, loss.h)
     a = abs(p - y)
-    a <= t ? half(a * a) : t * a - half(t * t)
+    a <= h ? half(a * a) : h * a - half(h * h)
 end
 
 function deriv{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
-    t = convert(T, loss.t)
+    h = convert(T, loss.h)
     r = p - y
-    r > t ? t : r < -t ? -t : r
+    r > h ? h : r < -h ? -h : r
 end
 
 function value_and_deriv{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
-    t = convert(T, loss.t)
+    h = convert(T, loss.h)
     r = p - y
-    r > t ? (t * r - half(t * t), t) :
-    r < -t ? (-t * r - half(t * t), -t) :
+    r > h ? (h * r - half(h * h), h) :
+    r < -h ? (-h * r - half(h * h), -h) :
     (half(r * r), r)
 end
 
@@ -72,6 +72,55 @@ deriv{T<:BlasReal}(::HingeLoss, p::T, y::T) = y * p < one(T) ? -y : zero(T)
 function value_and_deriv{T<:BlasReal}(::HingeLoss, p::T, y::T)
     yp = y * p
     yp >= one(T) ? (zero(T), zero(T)) : (one(T) - yp, -y)
+end
+
+
+## Smoothed HingeLoss
+#
+#   loss(p, y) := 0              ... y * p > 1 + h
+#                 1 - y * p      ... y * p < 1 - h
+#                 (1 + h - y * p)^2 / 4h   ... otherwise
+#
+#  Reference
+#
+#   O. Chapelle, "Training a Support Vector Machine in the Primal", Neural Computation.
+#
+immutable SmoothedHingeLoss <: UnivariateLoss
+    h::Float64
+
+    function SmoothedHingeLoss(h::Real)
+        h > zero(h) || error("h must be a positive value.")
+        new(convert(Float64, h))
+    end
+end
+
+function value{T<:BlasReal}(loss::SmoothedHingeLoss, p::T, y::T)
+    h = convert(T, loss.h)
+    yp = y * p
+    yp >= one(T) + h ? zero(T) :
+    yp <= one(T) - h ? one(T) - yp :
+    abs2(one(T) + h - yp) / 4h
+end
+
+function deriv{T<:BlasReal}(loss::SmoothedHingeLoss, p::T, y::T)
+    h = convert(T, loss.h)
+    yp = y * p
+    yp >= one(T) + h ? zero(T) :
+    yp <= one(T) - h ? -y :
+    y * (yp - one(T) - h) / 2h
+end
+
+function value_and_deriv{T<:BlasReal}(loss::SmoothedHingeLoss, p::T, y::T)
+    h = convert(T, loss.h)
+    yp = y * p
+    if yp >= one(T) + h
+        (zero(T), zero(T))
+    elseif yp <= one(T) - h
+        (one(T) - yp, -y)
+    else
+        z = yp - one(T) - h
+        (abs2(z) / 4h, y * z / 2h)
+    end
 end
 
 

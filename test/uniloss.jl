@@ -41,9 +41,9 @@ verify_uniloss(SqrLoss(),
 
 # HuberLoss
 
-function _huberf(t::Float64, u::Dual, y)
+function _huberf(h::Float64, u::Dual, y)
     a = abs(real(u) - y)
-    a > t ? t * _abs(u - y) - 0.5 * t^2 : 0.5 * abs2(u - y)
+    a > h ? h * _abs(u - y) - 0.5 * h^2 : 0.5 * abs2(u - y)
 end
 
 verify_uniloss(HuberLoss(0.3), (p, y) -> _huberf(0.3, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
@@ -54,6 +54,19 @@ verify_uniloss(HuberLoss(0.5), (p, y) -> _huberf(0.5, p, y), -2.0:0.25:2.0, -1.0
 
 _hingef(u::Dual, y) = y * real(u) < 1.0 ? 1.0 - y * u : dual(0.0, 0.0)
 verify_uniloss(HingeLoss(), _hingef, -2.0:0.5:2.0, [-1.0, 1.0])
+
+
+# SmoothedHingeLoss
+
+function _sm_hingef(h::Float64, u::Dual, y)
+    yu = y * real(u)
+    yu >= 1.0 + h ? dual(0.0, 0.0) :
+    yu <= 1.0 - h ? 1.0 - y * u :
+    abs2(1.0 + h - y * u) / (4 * h)
+end
+
+verify_uniloss(SmoothedHingeLoss(0.2), (p, y) -> _sm_hingef(0.2, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
+verify_uniloss(SmoothedHingeLoss(0.5), (p, y) -> _sm_hingef(0.5, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
 
 # LogisticLoss
 
