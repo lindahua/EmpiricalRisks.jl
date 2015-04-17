@@ -4,7 +4,7 @@ os:
   - osx
 julia:
   - release
-  - nightly
+  # - nightly   # temporarily disable this, until the tuple stuff is sorted out
 notifications:
   email: false
 # uncomment the following lines to override the default test script
