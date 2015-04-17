@@ -1,4 +1,4 @@
-using LossFuns
+using EmpiricalRisks
 using Base.Test
 using DualNumbers
 

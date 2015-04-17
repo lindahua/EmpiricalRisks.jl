@@ -1,5 +1,4 @@
-module LossFuns
-
+module EmpiricalRisks
 
 import Base.LinAlg: BlasReal
 
