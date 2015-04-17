@@ -158,17 +158,17 @@ end
 
 ## general functions for multivariate loss
 
-function value_and_grad{T<:BlasReal}(loss::MultivariateLoss, p::StridedVector{T}, y)
-    g = zeros(T, length(p))
-    value_and_grad!(loss, g, p, y)
-end
+grad{T<:BlasReal}(loss::MultivariateLoss, p::StridedVector{T}, y) =
+    grad!(loss, zeros(T, length(p)), p, y)
+
+value_and_grad{T<:BlasReal}(loss::MultivariateLoss, p::StridedVector{T}, y) =
+    value_and_grad!(loss, zeros(T, length(p)), p, y)
 
 
 ## Multinomial logistic loss (for Multinomial logistic regression)
 #
 #   loss(p, y) := log(sum_k exp(p[k])) - p[y]
 #
-
 immutable MultiLogisticLoss <: MultivariateLoss
 end
 

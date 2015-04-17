@@ -20,7 +20,11 @@ export
 
     value,
     deriv,
+    grad,
+    grad!,
     value_and_deriv,
+    value_and_grad,
+    value_and_grad!,
 
     # prediction.jl
     PredictionModel,

@@ -1,5 +1,6 @@
 tests = [
     "uniloss"
+    "multiloss"
 ]
 
 
