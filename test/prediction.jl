@@ -6,7 +6,6 @@ using Base.Test
 
 function verify_multipred(pred::UnivariatePredictionModel, θ, X::DenseMatrix)
     n = size(X, 2)
-    @test nsamples(pred, X) == n
     rr = zeros(n)
     for i = 1:n
         rr[i] = predict(pred, θ, X[:,i])
@@ -16,7 +15,6 @@ end
 
 function verify_multipred(pred::MultivariatePredictionModel, θ, X::DenseMatrix)
     n = size(X, 2)
-    @test nsamples(pred, X) == n
     p = length(predict(pred, θ, X[:,1]))
     rr = zeros(p, n)
     for i = 1:n
@@ -39,41 +37,77 @@ X = randn(d, n)
 # LinearPred
 
 a = randn()
-θ = randn(d)
-θa = [θ; a]
+w = randn(d)
+wa = [w; a]
 b = 2.5
+
+pred = LinearPred(d)
+@test inputlen(pred) == d
+@test inputsize(pred) == (d,)
+@test outputlen(pred) == 1
+@test outputsize(pred) == ()
+@test paramlen(pred) == d
+@test paramsize(pred) == (d,)
+@test isvalidparam(pred, w)
 
 for i = 1:n
     x_i = X[:,i]
-    @test_approx_eq predict(LinearPred(), θ, x_i) dot(θ, x_i)
+    @test_approx_eq predict(pred, w, x_i) dot(w, x_i)
 end
-verify_multipred(LinearPred(), θ, X)
+verify_multipred(pred, w, X)
 
 # AffinePred
 
+pred = AffinePred(d, b)
+@test inputlen(pred) == d
+@test inputsize(pred) == (d,)
+@test outputlen(pred) == 1
+@test outputsize(pred) == ()
+@test paramlen(pred) == d + 1
+@test paramsize(pred) == (d+1,)
+@test isvalidparam(pred, wa)
+
 for i = 1:n
     x_i = X[:,i]
-    @test_approx_eq predict(AffinePred(b), θa, x_i) dot(θ, x_i) + a * b
+    @test_approx_eq predict(pred, wa, x_i) dot(w, x_i) + a * b
 end
-verify_multipred(AffinePred(b), θa, X)
+verify_multipred(pred, wa, X)
 
 # MvLinearPred
 
 a = randn(k)
-θ = randn(d, k)
-θa = [θ; a']
+W = randn(k, d)
+Wa = [W a]
 b = 2.5
+
+pred = MvLinearPred(d, k)
+@test inputlen(pred) == d
+@test inputsize(pred) == (d,)
+@test outputlen(pred) == k
+@test outputsize(pred) == (k,)
+@test paramlen(pred) == d * k
+@test paramsize(pred) == (k, d)
+@test isvalidparam(pred, W)
 
 for i = 1:n
     x_i = X[:,i]
-    @test_approx_eq predict(MvLinearPred(), θ, x_i) θ'x_i
+    @test_approx_eq predict(pred, W, x_i) W * x_i
 end
-verify_multipred(MvLinearPred(), θ, X)
+verify_multipred(pred, W, X)
 
 # MvAffinePred
 
+pred = MvAffinePred(d, k, b)
+@test inputlen(pred) == d
+@test inputsize(pred) == (d,)
+@test outputlen(pred) == k
+@test outputsize(pred) == (k,)
+@test paramlen(pred) == (d+1) * k
+@test paramsize(pred) == (k, d+1)
+@test isvalidparam(pred, Wa)
+
 for i = 1:n
     x_i = X[:,i]
-    @test_approx_eq predict(MvAffinePred(b), θa, x_i) θ'x_i + a * b
+    @test_approx_eq predict(pred, Wa, x_i)  W * x_i + a * b
 end
-verify_multipred(MvAffinePred(b), θa, X)
+verify_multipred(pred, Wa, X)
