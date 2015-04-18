@@ -6,6 +6,7 @@ using Base.Test
 
 function verify_multipred(pred::UnivariatePredictionModel, θ, X::DenseMatrix)
     n = size(X, 2)
+    @test ninputs(pred, X) == n
     rr = zeros(n)
     for i = 1:n
         rr[i] = predict(pred, θ, X[:,i])
@@ -15,6 +16,7 @@ end
 
 function verify_multipred(pred::MultivariatePredictionModel, θ, X::DenseMatrix)
     n = size(X, 2)
+    @test ninputs(pred, X) == n
     p = length(predict(pred, θ, X[:,1]))
     rr = zeros(p, n)
     for i = 1:n

@@ -22,3 +22,18 @@ macro _checkdims(cond)
         ($cond) || throw(DimensionMismatch())
     end
 end
+
+function axpby!{T<:BlasReal}(a::T, x::StridedVector{T}, b::T, y::StridedVector{T})
+    if b == zero(T)
+        scale!(y, x, a)
+    elseif b == one(T)
+        axpy!(a, x, y)
+    else
+        n = length(x)
+        length(y) == n || throw(DimensionMismatch())
+        @inbounds for i = 1:n
+            y[i] = a * x[i] + b * y[i]
+        end
+    end
+    y
+end

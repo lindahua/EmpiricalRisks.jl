@@ -46,14 +46,23 @@ export
     outputsize,
     paramlen,
     paramsize,
+    ninputs,
     isvalidparam,
-    predict
+    predict,
 
+    # risks
+
+    RiskModel,
+    SupervisedRiskModel,
+    riskmodel,
+    risk,
+    addgrad!
 
 
 # source files
 include("common.jl")
 include("prediction.jl")
 include("loss.jl")
+include("risks.jl")
 
 end # module

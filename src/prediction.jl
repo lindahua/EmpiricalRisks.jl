@@ -27,6 +27,11 @@ inputsize(pm::LinearPred) = (pm.dim,)
 paramlen(pm::LinearPred) = pm.dim
 paramsize(pm::LinearPred) = (pm.dim,)
 
+function ninputs(pm::LinearPred, x::StridedVecOrMat)
+    @_checkdims inputlen(pm) == size(x,1)
+    size(x, 2)
+end
+
 function predict{T<:BlasReal}(pm::LinearPred, θ::StridedVector{T}, x::StridedVector{T})
     @_checkdims length(θ) == length(x) == pm.dim
     dot(θ, x)
@@ -52,6 +57,11 @@ inputlen(pm::AffinePred) = pm.dim
 inputsize(pm::AffinePred) = (pm.dim,)
 paramlen(pm::AffinePred) = pm.dim + 1
 paramsize(pm::AffinePred) = (pm.dim + 1,)
+
+function ninputs(pm::AffinePred, x::StridedVecOrMat)
+    @_checkdims inputlen(pm) == size(x,1)
+    size(x, 2)
+end
 
 function predict{T<:BlasReal}(pm::AffinePred, θ::StridedVector{T}, x::StridedVector{T})
     d = pm.dim
@@ -86,6 +96,11 @@ outputlen(pm::MvLinearPred) = pm.k
 paramlen(pm::MvLinearPred) = pm.k * pm.dim
 paramsize(pm::MvLinearPred) = (pm.k, pm.dim)
 
+function ninputs(pm::MvLinearPred, x::StridedVecOrMat)
+    @_checkdims inputlen(pm) == size(x,1)
+    size(x, 2)
+end
+
 function predict{T<:BlasReal}(pm::MvLinearPred, θ::StridedMatrix{T}, x::StridedVector{T})
     d = pm.dim
     k = pm.k
@@ -117,6 +132,11 @@ inputsize(pm::MvAffinePred) = (pm.dim,)
 outputlen(pm::MvAffinePred) = pm.k
 paramlen(pm::MvAffinePred) = pm.k * (pm.dim + 1)
 paramsize(pm::MvAffinePred) = (pm.k, pm.dim + 1)
+
+function ninputs(pm::MvAffinePred, x::StridedVecOrMat)
+    @_checkdims inputlen(pm) == size(x,1)
+    size(x, 2)
+end
 
 function predict{T<:BlasReal}(pm::MvAffinePred, θ::StridedMatrix{T}, x::StridedVector{T})
     d = pm.dim
