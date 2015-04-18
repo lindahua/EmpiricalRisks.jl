@@ -3,7 +3,6 @@ module EmpiricalRisks
 using ArrayViews
 
 import Base.LinAlg: BlasReal
-import Base.LinAlg.BLAS: axpy!, gemv!, gemm!
 
 export
 
@@ -41,11 +40,8 @@ export
     MvAffinePred,
 
     nsamples,
-    predict,
-    add_grad!,
-    total_grad,
-    total_grad!,
-    accum_grad!
+    predict
+
 
 
 # source files

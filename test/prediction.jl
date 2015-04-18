@@ -12,29 +12,6 @@ function verify_multipred(pred::UnivariatePredictionModel, θ, X::DenseMatrix)
         rr[i] = predict(pred, θ, X[:,i])
     end
     @test_approx_eq predict(pred, θ, X) rr
-
-    G = zeros(length(θ), n)
-    for i = 1:n
-        G[:,i] = grad(pred, θ, X[:,i])
-    end
-    @test_approx_eq G grad(pred, θ, X)
-
-    g0 = ones(similar(θ))
-    for i = 1:n
-        g = copy(g0)
-        add_grad!(pred, g, θ, X[:,i], 2.0)
-        @test_approx_eq g0 + 2.0 * G[:,i] g
-    end
-
-    g = copy(g0)
-    c = randn(n)
-    total_grad!(pred, g, θ, X, c)
-    @test_approx_eq G * c g
-    @test g == total_grad(pred, θ, X, c)
-
-    g = copy(g0)
-    accum_grad!(pred, g, θ, X, c)
-    @test_approx_eq g0 + G * c g
 end
 
 function verify_multipred(pred::MultivariatePredictionModel, θ, X::DenseMatrix)
@@ -69,7 +46,6 @@ b = 2.5
 for i = 1:n
     x_i = X[:,i]
     @test_approx_eq predict(LinearPred(), θ, x_i) dot(θ, x_i)
-    @test_approx_eq grad(LinearPred(), θ, x_i) x_i
 end
 verify_multipred(LinearPred(), θ, X)
 
