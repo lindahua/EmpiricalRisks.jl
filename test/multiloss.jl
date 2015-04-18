@@ -8,9 +8,9 @@ function verify_multiloss(loss::MultivariateLoss, f, u::Vector{Float64}, y)
     # verify inferred types
     YT = typeof(y)
     for VT in [Float64, Float32]
-        @test Base.return_types(value, (typeof(loss), Vector{VT}, YT)) == [VT]
-        @test Base.return_types(grad, (typeof(loss), Vector{VT}, YT)) == [Vector{VT}]
-        @test Base.return_types(value_and_grad, (typeof(loss), Vector{VT}, YT)) == [(VT, Vector{VT})]
+        @test Base.return_types(value, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [VT]
+        @test Base.return_types(grad, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [Vector{VT}]
+        @test Base.return_types(value_and_grad, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [@compat Tuple{VT, Vector{VT}}]
     end
 
     # verify computation correctness

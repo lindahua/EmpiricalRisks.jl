@@ -1,16 +1,16 @@
 using EmpiricalRisks
 using Base.Test
 using DualNumbers
-
+using Compat
 
 ### auxiliary functions
 
 function verify_uniloss(loss::UnivariateLoss, f, u::Float64, y::Real)
     # verify inferred types
     for VT in [Float64, Float32]
-        @test Base.return_types(value, (typeof(loss), VT, VT)) == [VT]
-        @test Base.return_types(deriv, (typeof(loss), VT, VT)) == [VT]
-        @test Base.return_types(value_and_deriv, (typeof(loss), VT, VT)) == [(VT, VT)]
+        @test Base.return_types(value, @compat Tuple{typeof(loss), VT, VT}) == [VT]
+        @test Base.return_types(deriv, @compat Tuple{typeof(loss), VT, VT}) == [VT]
+        @test Base.return_types(value_and_deriv, @compat Tuple{typeof(loss), VT, VT}) == [@compat Tuple{VT, VT}]
     end
 
     # verify computation correctness
