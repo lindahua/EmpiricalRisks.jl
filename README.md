@@ -52,5 +52,5 @@ This package provides basic components for implementing regularized empirical ri
 
 ## Documentation
 
-Here is the detailed documentation:
+Here is the [Detailed Documentation](http://empiricalrisksjl.readthedocs.org/en/latest/).
 [![Documentation Status](https://readthedocs.org/projects/empiricalrisksjl/badge/?version=latest)](https://readthedocs.org/projects/empiricalrisksjl/?badge=latest)
