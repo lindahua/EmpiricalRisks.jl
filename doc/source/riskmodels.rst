@@ -90,6 +90,20 @@ The package provides methods for computing the *total risk* and the derivative o
 
         When ``beta`` is zero, the computed gradient (or its scaled version) will be written to ``g`` without using the original data in ``g`` (in this case, ``g`` need not be initialized).
 
+
+.. function:: grad(rmodel, theta, x, y)
+
+    Compute and return the gradient of the total risk on ``x`` and ``y``, *w.r.t.* the parameter ``g``.
+
+    This is just a thin wrapper of ``addgrad!``:
+
+    .. code-block:: julia
+
+        grad(rm::SupervisedRiskModel, theta, x, y) =
+            addgrad!(rm, zero(eltype(theta)), similar(theta),
+                     one(eltype(theta)), theta, x, y)
+
+
 Note that the ``addgrad!`` method is provided for risk model with certain combinations of prediction models and loss functions. Below is a list of combinations that we currently support:
 
 - ``LinearPred`` + ``UnivariateLoss``
