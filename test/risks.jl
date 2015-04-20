@@ -124,6 +124,14 @@ function _risk_and_grad(::MvLinearPred, ::MSqrLoss, W::StridedMatrix, x::Strided
     (sumabs2(r) / 2, r * x')
 end
 
+function _risk_and_grad(pm::MvAffinePred, ::MSqrLoss, Wa::StridedMatrix, x::StridedVector, y::StridedVector)
+    d = length(x)
+    x_ = [x; pm.bias]
+    p = Wa * x_
+    r = p - y
+    (sumabs2(r) / 2, r * x_')
+end
+
 
 ### Univariate prediction + Univariate Loss
 
@@ -150,3 +158,4 @@ X = randn(d, n)
 y = randn(k, n)
 
 verify_risk(MvLinearPred(d, k), MSqrLoss(), W, X, y)
+verify_risk(MvAffinePred(d, k), MSqrLoss(), Wa, X, y)

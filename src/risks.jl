@@ -157,3 +157,46 @@ function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLin
     gemm!('N', 'T', convert(T, α), u, x, convert(T, β), g)
     g
 end
+
+function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
+                                                   β::Real, g::StridedMatrix{T},
+                                                   α::Real, θ::StridedMatrix{T}, x::StridedVector{T}, y)
+    pm = rm.predmodel
+    loss = rm.loss
+    @_checkdims size(g) == size(θ) == paramsize(pm)
+    n = ninputs(pm, x)
+    @assert n == 1
+
+    u = predict(pm, θ, x)
+    grad!(loss, u, u, y)
+    d = inputlen(pm)
+    α_ = convert(T, α)
+    β_ = convert(T, β)
+    gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
+    axpby!(convert(T, α * pm.bias), u, β_, view(g, :, d+1))
+    g
+end
+
+function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
+                                                   β::Real, g::StridedMatrix{T},
+                                                   α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
+
+    pm = rm.predmodel
+    loss = rm.loss
+    @_checkdims size(g) == size(θ) == paramsize(pm)
+    n = ninputs(pm, x)
+    n == size(y, ndims(y)) || error("Unmatched inputs and outputs.")
+
+    u = predict(pm, θ, x)
+    @assert size(u, 2) == n
+    for i = 1:n
+        u_i = view(u,:,i)
+        grad!(loss, u_i, u_i, gets(y,i))
+    end
+    d = inputlen(pm)
+    α_ = convert(T, α)
+    β_ = convert(T, β)
+    gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
+    axpby!(convert(T, α * pm.bias), vec(sum(u,2)), β_, view(g, :, d+1))
+    g
+end
