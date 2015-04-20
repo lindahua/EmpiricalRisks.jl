@@ -1,6 +1,7 @@
 module EmpiricalRisks
 
 using ArrayViews
+using Compat
 
 import Base.LinAlg: BlasReal
 import Base.LinAlg.BLAS: axpy!, gemv!, gemm!
