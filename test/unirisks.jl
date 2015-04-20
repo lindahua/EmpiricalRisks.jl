@@ -2,7 +2,7 @@ using EmpiricalRisks
 using Base.Test
 
 
-function _addgrad(pm::UnivariatePredictionModel, loss::UnivariateLoss,
+function _addgrad(pm::PredictionModel{1,0}, loss::UnivariateLoss,
                   β::Float64, g0::Vector{Float64}, α::Float64, θ::Vector{Float64}, X, y)
 
     rm = riskmodel(pm, loss)
@@ -10,7 +10,7 @@ function _addgrad(pm::UnivariatePredictionModel, loss::UnivariateLoss,
 end
 
 
-function verify_risks(pm::UnivariatePredictionModel, loss::UnivariateLoss,
+function verify_risks(pm::PredictionModel{1,0}, loss::UnivariateLoss,
                       θ::Vector{Float64}, X::Matrix{Float64}, y::Vector, rr::Vector{Float64})
 
     n = size(X, 2)
@@ -26,7 +26,7 @@ function verify_risks(pm::UnivariatePredictionModel, loss::UnivariateLoss,
     @test_approx_eq sum(rr) risk(rm, θ, X, y)
 end
 
-function verify_riskgrad(pm::UnivariatePredictionModel, loss::UnivariateLoss,
+function verify_riskgrad(pm::PredictionModel{1,0}, loss::UnivariateLoss,
                          θ::Vector{Float64}, X::Matrix{Float64}, y::Vector, G::Matrix{Float64})
 
     n = size(X, 2)

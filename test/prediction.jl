@@ -4,7 +4,7 @@ using Base.Test
 
 ## Auxiliary functions
 
-function verify_multipred(pred::UnivariatePredictionModel, θ, X::DenseMatrix)
+function verify_multipred(pred::PredictionModel{1,0}, θ, X::DenseMatrix)
     n = size(X, 2)
     @test ninputs(pred, X) == n
     rr = zeros(n)
@@ -14,7 +14,7 @@ function verify_multipred(pred::UnivariatePredictionModel, θ, X::DenseMatrix)
     @test_approx_eq predict(pred, θ, X) rr
 end
 
-function verify_multipred(pred::MultivariatePredictionModel, θ, X::DenseMatrix)
+function verify_multipred(pred::PredictionModel{1,1}, θ, X::DenseMatrix)
     n = size(X, 2)
     @test ninputs(pred, X) == n
     p = length(predict(pred, θ, X[:,1]))

@@ -1,4 +1,9 @@
 
+# N is the number of dimensions of the prediction
+abstract Loss{N}
+typealias UnivariateLoss Loss{0}
+typealias MultivariateLoss Loss{1}
+
 ## Abs loss (for regression)
 #
 #   loss(p, y) = |p - y|

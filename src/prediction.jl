@@ -1,14 +1,8 @@
 # Abstract types
 
-abstract PredictionModel
-abstract UnivariatePredictionModel <: PredictionModel
-abstract MultivariatePredictionModel <: PredictionModel
+abstract PredictionModel{NDIn, NDOut}
 
 ### Generic functions
-
-outputlen(pm::UnivariatePredictionModel) = 1
-outputsize(pm::UnivariatePredictionModel) = ()
-outputsize(pm::MultivariatePredictionModel) = (outputlen(pm),)
 
 isvalidparam(pm::PredictionModel, θ::AbstractArray) = (size(θ) == paramsize(pm))
 
@@ -17,13 +11,15 @@ isvalidparam(pm::PredictionModel, θ::AbstractArray) = (size(θ) == paramsize(pm
 
 ## LinearPred
 
-immutable LinearPred <: UnivariatePredictionModel
+immutable LinearPred <: PredictionModel{1,0}
     dim::Int
     LinearPred(d::Int) = new(d)
 end
 
 inputlen(pm::LinearPred) = pm.dim
 inputsize(pm::LinearPred) = (pm.dim,)
+outputlen(pm::LinearPred) = 1
+outputsize(pm::LinearPred) = ()
 paramlen(pm::LinearPred) = pm.dim
 paramsize(pm::LinearPred) = (pm.dim,)
 
@@ -45,7 +41,7 @@ end
 
 ## AffinePred
 
-immutable AffinePred <: UnivariatePredictionModel
+immutable AffinePred <: PredictionModel{1,0}
     dim::Int
     bias::Float64
 
@@ -55,6 +51,8 @@ end
 
 inputlen(pm::AffinePred) = pm.dim
 inputsize(pm::AffinePred) = (pm.dim,)
+outputlen(pm::AffinePred) = 1
+outputsize(pm::AffinePred) = ()
 paramlen(pm::AffinePred) = pm.dim + 1
 paramsize(pm::AffinePred) = (pm.dim + 1,)
 
@@ -83,7 +81,7 @@ end
 
 ## MvLinearPred
 
-immutable MvLinearPred <: MultivariatePredictionModel
+immutable MvLinearPred <: PredictionModel{1,1}
     dim::Int
     k::Int
 
@@ -93,6 +91,7 @@ end
 inputlen(pm::MvLinearPred) = pm.dim
 inputsize(pm::MvLinearPred) = (pm.dim,)
 outputlen(pm::MvLinearPred) = pm.k
+outputsize(pm::MvLinearPred) = (pm.k,)
 paramlen(pm::MvLinearPred) = pm.k * pm.dim
 paramsize(pm::MvLinearPred) = (pm.k, pm.dim)
 
@@ -118,7 +117,7 @@ end
 
 ## MvAffinePred
 
-immutable MvAffinePred <: MultivariatePredictionModel
+immutable MvAffinePred <: PredictionModel{1,1}
     dim::Int
     k::Int
     bias::Float64
@@ -130,6 +129,7 @@ end
 inputlen(pm::MvAffinePred) = pm.dim
 inputsize(pm::MvAffinePred) = (pm.dim,)
 outputlen(pm::MvAffinePred) = pm.k
+outputsize(pm::MvAffinePred) = (pm.k,)
 paramlen(pm::MvAffinePred) = pm.k * (pm.dim + 1)
 paramsize(pm::MvAffinePred) = (pm.k, pm.dim + 1)
 

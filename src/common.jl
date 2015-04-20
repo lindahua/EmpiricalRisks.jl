@@ -1,14 +1,4 @@
 
-# Abstract type hierarcgy
-
-abstract Loss
-abstract UnivariateLoss <: Loss
-abstract MultivariateLoss <: Loss
-
-abstract PredictionModel
-abstract UnivariatePredictionModel <: PredictionModel
-abstract MultivariatePredictionModel <: PredictionModel
-
 # utilities
 
 half(x::Float64) = x * 0.5
@@ -37,3 +27,7 @@ function axpby!{T<:BlasReal}(a::T, x::StridedVector{T}, b::T, y::StridedVector{T
     end
     y
 end
+
+gets(x::StridedVector, i::Int) = x[i]
+gets(x::StridedMatrix, i::Int) = view(x,:,i)
+gets{T}(x::StridedArray{T,3}, i::Int) = view(x,:,:,i)
