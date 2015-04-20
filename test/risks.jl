@@ -13,7 +13,7 @@ end
 
 
 function verify_risk_values(pm::PredictionModel, loss::Loss,
-                      θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat{Float64}, rr::Vector{Float64})
+                      θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat, rr::Vector{Float64})
 
     n = size(X, 2)
     rm = riskmodel(pm, loss)
@@ -30,7 +30,7 @@ function verify_risk_values(pm::PredictionModel, loss::Loss,
 end
 
 function verify_risk_grads(pm::PredictionModel, loss::Loss,
-                           θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat{Float64}, G::Array{Float64})
+                           θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat, G::Array{Float64})
 
     n = size(X, 2)
     rm = riskmodel(pm, loss)
@@ -57,7 +57,7 @@ end
 
 
 function verify_risk(pm::PredictionModel, loss::Loss,
-                     θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat{Float64})
+                     θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat)
 
 
     # produce ground-truth
@@ -115,6 +115,14 @@ function _risk_and_grad(pm::MvAffinePred, ::SumSqrLoss, Wa::StridedMatrix, x::St
     (sumabs2(r) / 2, r * x_')
 end
 
+function _risk_and_grad(pm::MvLinearPred, ::MultiLogisticLoss, W::StridedMatrix, x::StridedVector, y::Int)
+    p = W * x
+    ep = exp(p)
+    q = ep ./ sum(ep)
+    q[y] -= 1
+    (log(sum(ep)) - p[y], q * x')
+end
+
 
 ### Univariate prediction + Univariate Loss
 
@@ -143,3 +151,7 @@ y = randn(k, n)
 verify_risk(MvLinearPred(d, k), SumSqrLoss(), W, X, y)
 verify_risk(MvAffinePred(d, k), SumSqrLoss(), Wa, X, y)
 verify_risk(MvAffinePred(d, k, bias), SumSqrLoss(), Wa, X, y)
+
+y = [1, 2, 3, 3, 2, 1, 2, 3]
+@assert length(y) == n
+verify_risk(MvLinearPred(d, k), MultiLogisticLoss(), W, X, y)
