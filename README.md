@@ -9,20 +9,7 @@ This Julia package provides a collection of predictors and loss functions, mainl
 
 ## Overview
 
-This package provides the basic components for *(regularized) empirical risk minization*, which is generally formulated as follows
 
-![regerm](imgs/regerm.png)
-
-As we can see, this formulation involves several components:
-
-- **Prediction model:** ``f(x; θ)``, which takes an input `x` and a parameter `θ` and produces an output (say `u`).
-- **Loss function:** ``loss(u, y)``, which compares the predicted output `u` and a desired response `y`, and produces a real value that measuring the *loss*. Generally, better prediction yields smaller loss.
-- **Risk model:** ``loss(f(x; θ), y)``, the *prediction model* and the *loss* together are referred to as the *risk model*. When the data `x` and `y` are given, the risk model can be considered as a function of `theta`.
-- **Regularizer:**  ``r(θ)`` is often introduced to regularize the parameter, which, when used properly, can improve the numerical stability of the problem and the generalization performance of the estimated model.
-
-This package provides all these components, as well as the gradient computation routines and proximal operators, to support the implementation of various empirical risk minimization algorithms.
-
-All functions in this packages are well optimized and systematically tested.
 
 
 ----
@@ -115,4 +102,4 @@ Each prediction model implements the following methods:
 
 - **predict**(pm, θ, x)
 
-  Predict the output given the parameter `θ` and the input `x`. 
+  Predict the output given the parameter `θ` and the input `x`.
