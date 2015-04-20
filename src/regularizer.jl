@@ -6,6 +6,9 @@ abstract Regularizer
 
 grad{T<:FloatingPoint}(f::Regularizer, θ::StridedArray{T}) = addgrad!(f, zero(T), similar(θ), one(T), θ)
 
+prox!(f::Regularizer, θ::StridedArray) = prox!(f, θ, θ)
+prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ)
+
 
 ## SqrL2Reg: (c/2) * ||θ||_2^2
 
@@ -19,6 +22,10 @@ value{T<:BlasReal}(f::SqrL2Reg{T}, θ::StridedArray{T}) = half(f.c * sumabs2(θ)
 
 function addgrad!{T<:BlasReal,N}(f::SqrL2Reg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N})
     axpby!(f.c * α, θ, β, g)
+end
+
+function prox!{T<:BlasReal}(f::SqrL2Reg{T}, r::StridedArray{T}, θ::StridedArray{T})
+    scale!(r, θ, one(T) / (one(T) + f.c))
 end
 
 
@@ -45,6 +52,15 @@ function addgrad!{T<:BlasReal,N}(f::L1Reg{T}, β::T, g::StridedArray{T,N}, α::T
         end
     end
     g
+end
+
+function prox!{T<:BlasReal}(f::L1Reg{T}, r::StridedArray{T}, θ::StridedArray{T})
+    @_checkdims size(r) == size(θ)
+    c = f.c
+    for i in eachindex(θ)
+        r[i] = shrink(θ[i], c)
+    end
+    r
 end
 
 
@@ -85,4 +101,14 @@ function addgrad!{T<:BlasReal,N}(f::ElasticReg{T}, β::T, g::StridedArray{T,N}, 
         end
     end
     g
+end
+
+function prox!{T<:BlasReal}(f::ElasticReg{T}, r::StridedArray{T}, θ::StridedArray{T})
+    @_checkdims size(r) == size(θ)
+    c = one(T) / (one(T) + f.c2)
+    t = f.c1 / (one(T) + f.c2)
+    @inbounds for i in eachindex(θ)
+        r[i] = shrink(c * θ[i], t)
+    end
+    r
 end

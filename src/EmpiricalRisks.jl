@@ -65,7 +65,9 @@ export
     Regularizer,
     SqrL2Reg,
     L1Reg,
-    ElasticReg
+    ElasticReg,
+
+    prox, prox!
 
 
 # source files
