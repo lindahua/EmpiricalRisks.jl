@@ -25,3 +25,5 @@ All functions in this packages are well optimized and systematically tested.
 
 .. toctree::
    :maxdepth: 2
+
+   prediction.rst
