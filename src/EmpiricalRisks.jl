@@ -20,6 +20,8 @@ export
     HingeLoss,
     SmoothedHingeLoss,
     LogisticLoss,
+    SumLoss,
+    SumSqrLoss,
     MultiLogisticLoss,
 
     value,

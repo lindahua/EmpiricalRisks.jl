@@ -208,6 +208,55 @@ value_and_grad{T<:BlasReal}(loss::MultivariateLoss, p::StridedVector{T}, y) =
     value_and_grad!(loss, zeros(T, length(p)), p, y)
 
 
+## SumLoss
+#
+#   loss(p, y) := sum_k loss.intern(p[k], y[k])
+#
+immutable SumLoss{L<:UnivariateLoss} <: MultivariateLoss
+    intern::L
+end
+
+SumLoss{L<:UnivariateLoss}(loss::L) = SumLoss{L}(loss)
+
+typealias SumSqrLoss SumLoss{SqrLoss}
+SumSqrLoss() = SumLoss{SqrLoss}(SqrLoss())
+
+function value{T<:BlasReal}(s::SumLoss, p::StridedVector{T}, y::StridedVector{T})
+    loss = s.intern
+    k = length(p)
+    @_checkdims k == length(y)
+    s = value(loss, p[1], y[1])
+    @inbounds for i = 2:k
+        s += value(loss, p[i], y[i])
+    end
+    s
+end
+
+function grad!{T<:BlasReal}(s::SumLoss, g::StridedVector{T}, p::StridedVector{T}, y::StridedVector{T})
+    loss = s.intern
+    k = length(p)
+    @_checkdims k == length(g) == length(y)
+    @inbounds for i = 1:k
+        g[i] = deriv(loss, p[i], y[i])
+    end
+    g
+end
+
+function value_and_grad!{T<:BlasReal}(s::SumLoss, g::StridedVector{T}, p::StridedVector{T}, y::StridedVector{T})
+    loss = s.intern
+    k = length(p)
+    @_checkdims k == length(g) == length(y)
+    s, dv = value_and_deriv(loss, p[1], y[1])
+    g[1] = dv
+    @inbounds for i = 2:k
+        v, dv = value_and_deriv(loss, p[i], y[i])
+        s += v
+        g[i] = dv
+    end
+    (s, g)
+end
+
+
 ## Multinomial logistic loss (for Multinomial logistic regression)
 #
 #   loss(p, y) := log(sum_k exp(p[k])) - p[y]
@@ -227,7 +276,7 @@ end
 
 function grad!{T<:BlasReal}(::MultiLogisticLoss, g::StridedVector{T}, p::StridedVector{T}, y::Integer)
     k = length(p)
-    length(g) == k || throw(DimensionMismatch("Inconsistent input dimensions."))
+    @_checkdims length(g) == k
     pmax = maximum(p)
     s = zero(T)
     @inbounds for i = 1:k
@@ -244,7 +293,7 @@ end
 
 function value_and_grad!{T<:BlasReal}(::MultiLogisticLoss, g::StridedVector{T}, p::StridedVector{T}, y::Integer)
     k = length(p)
-    length(g) == k || throw(DimensionMismatch("Inconsistent input dimensions."))
+    @_checkdims length(g) == k
 
     pmax = maximum(p)
     p_y = p[y]  # g and p can be the same array, so have to cache p[y] before p is overwritten

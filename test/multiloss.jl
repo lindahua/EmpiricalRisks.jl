@@ -1,5 +1,6 @@
 using EmpiricalRisks
 using Base.Test
+using Compat
 using DualNumbers
 
 ### Auxiliary functions
@@ -7,7 +8,7 @@ using DualNumbers
 function verify_multiloss(loss::MultivariateLoss, f, u::Vector{Float64}, y)
     # verify inferred types
     YT = typeof(y)
-    for VT in [Float64, Float32]
+    for VT in [Float64]
         @test Base.return_types(value, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [VT]
         @test Base.return_types(grad, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [Vector{VT}]
         @test Base.return_types(value_and_grad, @compat Tuple{typeof(loss), Vector{VT}, YT}) == [@compat Tuple{VT, Vector{VT}}]
@@ -41,10 +42,24 @@ end
 
 ### Test cases
 
-_mlogisticf(u, y::Int) = log(sum(exp(u))) - u[y]
-
 k = 3
 n = 8
+
+# Sum squared loss
+
+_sumsqrf(u, y) = sum(abs2(u - y)) / 2
+
+u = randn(k, n)
+y = randn(k, n)
+for i = 1:n
+    verify_multiloss(SumSqrLoss(), _sumsqrf, copy(u[:,i]), y[:,i])
+end
+
+
+# Multilogistic loss
+
+_mlogisticf(u, y::Int) = log(sum(exp(u))) - u[y]
+
 u = randn(k, n)
 for i = 1:n, y = 1:k
     verify_multiloss(MultiLogisticLoss(), _mlogisticf, copy(u[:,i]), y)
