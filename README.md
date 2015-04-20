@@ -8,15 +8,3 @@ This Julia package provides a collection of predictors and loss functions, mainl
 
 **Documentation:**
 [![Documentation Status](https://readthedocs.org/projects/empiricalrisksjl/badge/?version=latest)](https://readthedocs.org/projects/empiricalrisksjl/?badge=latest)
-
-
------
-
-## Overview
-
-
-
-
-----
-
-## Prediction models
