@@ -28,3 +28,4 @@ Contents:
 
    prediction.rst
    loss.rst
+   riskmodels.rst
