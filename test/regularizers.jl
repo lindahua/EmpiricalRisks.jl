@@ -41,13 +41,20 @@ verify_reg(SqrL2Reg(c2), g0, θ,
     c2 * θ,
     1.0 / (1.0 + c2) * θ)
 
+@test_approx_eq prox(SqrL2Reg(c2), θ, 1.5) prox(SqrL2Reg(1.5 * c2), θ)
+
+
 verify_reg(L1Reg(c1), g0, θ,
     c1 * sumabs(θ),
     c1 * sign(θ),
     shrink(θ, c1))
+
+@test_approx_eq prox(L1Reg(c1), θ, 1.5) prox(L1Reg(1.5 * c1), θ)
 
 
 verify_reg(ElasticReg(c1, c2), g0, θ,
     c1 * sumabs(θ) + (c2/2) * sumabs2(θ),
     c1 * sign(θ) + c2 * θ,
     shrink(1.0 / (1.0 + c2) * θ, c1 / (1.0 + c2)))
+
+@test_approx_eq prox(ElasticReg(c1, c2), θ, 1.5) prox(ElasticReg(1.5 * c1, 1.5 * c2), θ)

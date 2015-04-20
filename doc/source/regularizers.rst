@@ -27,14 +27,14 @@ Each regularizer type implements the following methods:
         When ``beta`` is zero, the computed gradient (or its scaled version) will be written to ``g`` without using the original data in ``g`` (in this case, ``g`` need not be initialized).
 
 
-.. function:: prox!(reg, r, theta)
+.. function:: prox!(reg, r, theta, lambda)
 
     Evaluate the proximal operator, as follows:
 
     .. math::
 
         r \leftarrow \mathop{\mathrm{argmin}}_{x}
-        \frac{1}{2} \|x - \theta\|^2 + \mathrm{Reg}(x)
+        \frac{1}{2} \|x - \theta\|^2 + \lambda \cdot \mathrm{Reg}(x)
 
     This method is needed when proximal methods are used to solve the problem.
 
@@ -46,9 +46,9 @@ In addition, the package also provides a set of generic wrappers to simplify som
 
     This is a wrapper of ``addgrad!``.
 
-.. function:: prox(reg, theta)
+.. function:: prox(reg, theta[, lambda])
 
-    Evaluate the proximal operator at ``theta``.
+    Evaluate the proximal operator at ``theta``. When ``lambda`` is omitted, it is set to ``1`` by default.
 
     This is a wrapper of ``prox!``.
 
@@ -112,4 +112,3 @@ This is also known as *L1/L2 regularizer*, which is used in the Elastic Net form
     end
 
     ElasticReg{T<:FloatingPoint}(c1::T, c2::T) = ElasticReg{T}(c1, c2)
-        

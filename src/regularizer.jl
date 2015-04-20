@@ -7,7 +7,9 @@ abstract Regularizer
 grad{T<:FloatingPoint}(f::Regularizer, θ::StridedArray{T}) = addgrad!(f, zero(T), similar(θ), one(T), θ)
 
 prox!(f::Regularizer, θ::StridedArray) = prox!(f, θ, θ)
-prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ)
+
+prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ, 1.0)
+prox(f::Regularizer, θ::StridedArray, λ::Real) = prox!(f, similar(θ), θ, λ)
 
 
 ## SqrL2Reg: (c/2) * ||θ||_2^2
@@ -24,8 +26,9 @@ function addgrad!{T<:BlasReal,N}(f::SqrL2Reg{T}, β::T, g::StridedArray{T,N}, α
     axpby!(f.c * α, θ, β, g)
 end
 
-function prox!{T<:BlasReal}(f::SqrL2Reg{T}, r::StridedArray{T}, θ::StridedArray{T})
-    scale!(r, θ, one(T) / (one(T) + f.c))
+function prox!{T<:BlasReal}(f::SqrL2Reg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
+    c = convert(T, λ) * f.c
+    scale!(r, θ, one(T) / (one(T) + c))
 end
 
 
@@ -54,9 +57,9 @@ function addgrad!{T<:BlasReal,N}(f::L1Reg{T}, β::T, g::StridedArray{T,N}, α::T
     g
 end
 
-function prox!{T<:BlasReal}(f::L1Reg{T}, r::StridedArray{T}, θ::StridedArray{T})
+function prox!{T<:BlasReal}(f::L1Reg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
     @_checkdims size(r) == size(θ)
-    c = f.c
+    c = convert(T, λ) * f.c
     for i in eachindex(θ)
         r[i] = shrink(θ[i], c)
     end
@@ -103,10 +106,12 @@ function addgrad!{T<:BlasReal,N}(f::ElasticReg{T}, β::T, g::StridedArray{T,N}, 
     g
 end
 
-function prox!{T<:BlasReal}(f::ElasticReg{T}, r::StridedArray{T}, θ::StridedArray{T})
+function prox!{T<:BlasReal}(f::ElasticReg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
     @_checkdims size(r) == size(θ)
-    c = one(T) / (one(T) + f.c2)
-    t = f.c1 / (one(T) + f.c2)
+    c1 = convert(T, λ) * f.c1
+    c2 = convert(T, λ) * f.c2
+    c = one(T) / (one(T) + c2)
+    t = c1 / (one(T) + c2)
     @inbounds for i in eachindex(θ)
         r[i] = shrink(c * θ[i], t)
     end
