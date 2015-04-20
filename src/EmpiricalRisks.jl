@@ -58,7 +58,14 @@ export
     SupervisedRiskModel,
     riskmodel,
     risk,
-    addgrad!
+    addgrad!,
+
+    # regularizers
+
+    Regularizer,
+    SqrL2Reg,
+    L1Reg,
+    ElasticReg
 
 
 # source files
@@ -66,5 +73,6 @@ include("common.jl")
 include("prediction.jl")
 include("loss.jl")
 include("risks.jl")
+include("regularizer.jl")
 
 end # module

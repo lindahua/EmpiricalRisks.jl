@@ -2,7 +2,8 @@ tests = [
     "uniloss",
     "multiloss",
     "prediction",
-    "risks"
+    "risks",
+    "regularizers"
 ]
 
 
