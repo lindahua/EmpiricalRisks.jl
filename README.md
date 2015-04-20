@@ -14,21 +14,22 @@ This package provides basic components for implementing regularized empirical ri
 
 - **Prediction models** ``u = f(x; θ)``
 
-  - [ ] linear prediction
-  - [ ] affine prediction
-  - [ ] multivariate linear prediction
-  - [ ] multivariate affine prediction
+  - [x] linear prediction
+  - [x] affine prediction
+  - [x] multivariate linear prediction
+  - [x] multivariate affine prediction
 
 - **Loss functions** ``loss(u, y)``
 
-  - [ ] squared loss
-  - [ ] absolute loss
-  - [ ] huber loss
-  - [ ] hinge loss
-  - [ ] smoothed hinge loss
-  - [ ] logistic loss
-  - [ ] sum squared loss (for multivariate prediction)
-  - [ ] multinomial logistic loss
+  - [x] squared loss
+  - [x] absolute loss
+  - [x] quantile loss
+  - [x] huber loss
+  - [x] hinge loss
+  - [x] smoothed hinge loss
+  - [x] logistic loss
+  - [x] sum squared loss (for multivariate prediction)
+  - [x] multinomial logistic loss
 
   **Notes:**
 
@@ -38,9 +39,9 @@ This package provides basic components for implementing regularized empirical ri
 
 - **Regularizers**  
 
-  - [ ] squared L2
-  - [ ] L1
-  - [ ] elastic net (L1 + squared L2)
+  - [x] squared L2
+  - [x] L1
+  - [x] elastic net (L1 + squared L2)
 
   **Notes:**
 
