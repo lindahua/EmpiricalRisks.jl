@@ -97,11 +97,9 @@ function _risk_and_grad(::LinearPred, ::SqrLoss, w::StridedVector, x::StridedVec
 end
 
 function _risk_and_grad(pm::AffinePred, ::SqrLoss, wa::StridedVector, x::StridedVector, y::Real)
-    d = length(x)
-    w, a = wa[1:d], wa[d+1]
-    p = dot(w, x) + a * pm.bias
-    r = p - y
-    (r^2 / 2, [x; pm.bias] * r)
+    x_ = [x; pm.bias]
+    r = dot(wa, x_) - y
+    (r^2 / 2, x_ * r)
 end
 
 function _risk_and_grad(::MvLinearPred, ::SumSqrLoss, W::StridedMatrix, x::StridedVector, y::StridedVector)
