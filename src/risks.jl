@@ -7,7 +7,8 @@ immutable SupervisedRiskModel{PM<:PredictionModel,L<:Loss} <: RiskModel
     loss::L
 end
 
-riskmodel{PM<:PredictionModel,L<:Loss}(pm::PM, loss::L) = SupervisedRiskModel{PM,L}(pm,loss)
+riskmodel{N,M}(pm::PredictionModel{N,M}, loss::Loss{M}) =
+    SupervisedRiskModel{typeof(pm), typeof(loss)}(pm,loss)
 
 ### generic functions
 
