@@ -89,21 +89,6 @@ function verify_risk(pm::PredictionModel, loss::Loss,
     verify_risk_grads(pm, loss, θ, X, y, G0)
 end
 
-
-## mock a multi-valued sqr loss for testing
-
-immutable MSqrLoss <: MultivariateLoss
-end
-
-EmpiricalRisks.value(::MSqrLoss, u::StridedVector, y::StridedVector) = sumabs2(u - y) / 2
-
-function EmpiricalRisks.grad!(::MSqrLoss, g::StridedVector, u::StridedVector, y::StridedVector)
-    for i = 1:length(g)
-        g[i] = u[i] - y[i]
-    end
-    return g
-end
-
 ## (safe) reference implementation to compare with
 
 function _risk_and_grad(::LinearPred, ::SqrLoss, w::StridedVector, x::StridedVector, y::Real)
@@ -119,12 +104,12 @@ function _risk_and_grad(pm::AffinePred, ::SqrLoss, wa::StridedVector, x::Strided
     (r^2 / 2, [x; pm.bias] * r)
 end
 
-function _risk_and_grad(::MvLinearPred, ::MSqrLoss, W::StridedMatrix, x::StridedVector, y::StridedVector)
+function _risk_and_grad(::MvLinearPred, ::SumSqrLoss, W::StridedMatrix, x::StridedVector, y::StridedVector)
     r = W * x - y
     (sumabs2(r) / 2, r * x')
 end
 
-function _risk_and_grad(pm::MvAffinePred, ::MSqrLoss, Wa::StridedMatrix, x::StridedVector, y::StridedVector)
+function _risk_and_grad(pm::MvAffinePred, ::SumSqrLoss, Wa::StridedMatrix, x::StridedVector, y::StridedVector)
     d = length(x)
     x_ = [x; pm.bias]
     p = Wa * x_
@@ -157,5 +142,6 @@ Wa = [W a]
 X = randn(d, n)
 y = randn(k, n)
 
-verify_risk(MvLinearPred(d, k), MSqrLoss(), W, X, y)
-verify_risk(MvAffinePred(d, k), MSqrLoss(), Wa, X, y)
+verify_risk(MvLinearPred(d, k), SumSqrLoss(), W, X, y)
+verify_risk(MvAffinePred(d, k), SumSqrLoss(), Wa, X, y)
+verify_risk(MvAffinePred(d, k, bias), SumSqrLoss(), Wa, X, y)
