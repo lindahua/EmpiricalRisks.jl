@@ -11,6 +11,47 @@ A *prediction model* :math:`f(x; \theta)` is a function with two arguments: the 
   # NDOut: The number of dimensions of each output (0: scalar, 1: vector, 2: matrix, ...)
 
 
+Common Methods
+----------------
+
+Each prediction model implements the following methods:
+
+.. function:: inputlen(pm)
+
+    Return the length of each input.
+
+.. function:: inputsize(pm)
+
+    Return the size of each input.
+
+.. function:: outputlen(pm)
+
+    Return the length of each output.
+
+.. function:: outputsize(pm)
+
+    Return the size of each output.
+
+.. function:: paramlen(pm)
+
+    Return the length of the parameter.
+
+.. function:: paramsize(pm)
+
+    Return the size of the parameter.
+
+.. function:: ninputs(pm, x)
+
+    Verify the validity of ``x`` as a single input or as a batch of inputs.
+    If ``x`` is valid, it returns the number of inputs in array ``x``, otherwise, it raises an error.
+
+.. function:: predict(pm, theta, x)
+
+    Predict the output given the parameter ``theta`` and the input ``x``.
+
+    Here, ``x`` can be either a sample or an array comprised of multiple samples.
+
+
 Predefined Models
 -------------------
 
@@ -106,47 +147,6 @@ Here, ``b`` is a model constant to serve as the base of the bias term.
     end
 
 
-Common Methods
-----------------
-
-Each prediction model implements the following methods:
-
-.. function:: inputlen(pm)
-
-    Return the length of each input.
-
-.. function:: inputsize(pm)
-
-    Return the size of each input.
-
-.. function:: outputlen(pm)
-
-    Return the length of each output.
-
-.. function:: outputsize(pm)
-
-    Return the size of each output.
-
-.. function:: paramlen(pm)
-
-    Return the length of the parameter.
-
-.. function:: paramsize(pm)
-
-    Return the size of the parameter.
-
-.. function:: ninputs(pm, x)
-
-    Verify the validity of ``x`` as a single input or as a batch of inputs.
-    If ``x`` is valid, it returns the number of inputs in array ``x``, otherwise, it raises an error.
-
-.. function:: predict(pm, theta, x)
-
-    Predict the output given the parameter ``theta`` and the input ``x``.
-
-    Here, ``x`` can be either a sample or an array comprised of multiple samples.
-
-
 Examples
 ---------
 
@@ -173,4 +173,3 @@ Here is an example that illustrates a prediction model.
     X = randn(3, 10)    # X is a matrix with 10 samples
     ninputs(pm, X)      # --> 10
     predict(pm, W, X)   # make predictions: --> W * X
-    

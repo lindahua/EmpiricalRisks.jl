@@ -20,10 +20,11 @@ This package provides these components, as well as the gradient computation rout
 All functions in this packages are well optimized and systematically tested.
 
 
-
-**Contents:**
+Contents:
+----------
 
 .. toctree::
    :maxdepth: 2
 
    prediction.rst
+   loss.rst
