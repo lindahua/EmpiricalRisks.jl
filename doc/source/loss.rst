@@ -37,7 +37,9 @@ Each **univariate loss** function implements the following methods:
 
     Compute both the loss value and derivative (*w.r.t.* ``u``) at the same time.
 
-    **Note:** This can be more efficient than calling ``value`` and ``deriv`` respectively, when you need both the value and derivative.
+    .. note::
+
+        This can be more efficient than calling ``value`` and ``deriv`` respectively, when you need both the value and derivative.
 
 Methods for Multivariate Loss
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,14 +54,18 @@ Each **multivariate loss** function implements the following methods:
 
     Compute the gradient *w.r.t.* ``u``, and write the results to ``g``. This function returns ``g``.
 
-    **Note:** ``g`` is allowed to be the same as ``u``, in which case, the content of ``u`` will be overrided by the derivative values.
+    .. note::
+
+        ``g`` is allowed to be the same as ``u``, in which case, the content of ``u`` will be overrided by the derivative values.
 
 
 .. function:: value_and_grad!(loss, g, u, y)
 
     Compute both the loss value and the derivative *w.r.t.* ``u`` at the same time. This function returns ``(v, g)``, where ``v`` is the loss value.
 
-    **Note:** ``g`` is allowed to be the same as ``u``, in which case, the content of ``u`` will be overrided by the derivative values.
+    .. note::
+
+        ``g`` is allowed to be the same as ``u``, in which case, the content of ``u`` will be overrided by the derivative values.
 
 
 For multivariate loss functions, the package also provides the following two generic functions for convenience.
@@ -72,7 +78,7 @@ For multivariate loss functions, the package also provides the following two gen
 
     Compute and return both the loss value and the gradient *w.r.t.* ``u``, and return them as a 2-tuple.
 
-**Remarks:** Both ``grad`` and ``value_and_grad`` are thin wrappers of the type-specific methods ``grad!`` and ``value_and_grad!``.
+Both ``grad`` and ``value_and_grad`` are thin wrappers of the type-specific methods ``grad!`` and ``value_and_grad!``.
 
 
 Predefined Loss Functions
