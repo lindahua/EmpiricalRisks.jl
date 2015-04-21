@@ -60,6 +60,7 @@ export
     riskmodel,
     risk,
     addgrad!,
+    value_and_addgrad!,
 
     # regularizers
 

@@ -10,12 +10,22 @@ function _addgrad(f::Regularizer, β::Real, g0::StridedArray, α::Real, θ::Stri
     addgrad!(f, β, copy(g0), α, θ)
 end
 
+function _value_and_addgrad(f::Regularizer, β::Real, g0::StridedArray, α::Real, θ::StridedArray)
+    value_and_addgrad!(f, β, copy(g0), α, θ)
+end
+
 function verify_reg(f::Regularizer, g0::StridedArray, θ::StridedArray, vr::Real, gr::Array, pr::Array)
     @test_approx_eq vr value(f, θ)
     @test_approx_eq gr grad(f, θ)
 
     for β in [0.0, 0.5, 1.0], α in [0.0, 1.0, 2.5]
-        @test_approx_eq β * g0 + α * gr _addgrad(f, β, g0, α, θ)
+        v_ = α * vr
+        g_ = β * g0 + α * gr
+
+        @test_approx_eq g_ _addgrad(f, β, g0, α, θ)
+        (v, g) = _value_and_addgrad(f, β, g0, α, θ)
+        @test_approx_eq v_ v
+        @test_approx_eq g_ g
     end
 
     @test_approx_eq pr prox(f, θ)

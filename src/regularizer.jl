@@ -26,6 +26,26 @@ function addgrad!{T<:BlasReal,N}(f::SqrL2Reg{T}, β::T, g::StridedArray{T,N}, α
     axpby!(f.c * α, θ, β, g)
 end
 
+function value_and_addgrad!{T<:BlasReal,N}(f::SqrL2Reg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N})
+    @_checkdims length(g) == length(θ)
+    c = f.c * α
+    v = zero(T)
+    if β == zero(T)
+        @inbounds for i in eachindex(θ)
+            θ_i = θ[i]
+            v += abs2(θ_i)
+            g[i] = c * θ_i
+        end
+    else
+        @inbounds for i in eachindex(θ)
+            θ_i = θ[i]
+            v += abs2(θ_i)
+            g[i] = β * g[i] + c * θ_i
+        end
+    end
+    (half(c * v), g)
+end
+
 function prox!{T<:BlasReal}(f::SqrL2Reg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
     c = convert(T, λ) * f.c
     scale!(r, θ, one(T) / (one(T) + c))
@@ -55,6 +75,26 @@ function addgrad!{T<:BlasReal,N}(f::L1Reg{T}, β::T, g::StridedArray{T,N}, α::T
         end
     end
     g
+end
+
+function value_and_addgrad!{T<:BlasReal,N}(f::L1Reg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N})
+    @_checkdims length(g) == length(θ)
+    c = f.c * α
+    v = zero(T)
+    if β == zero(T)
+        for i in eachindex(θ)
+            θ_i = θ[i]
+            v += abs(θ_i)
+            @inbounds g[i] = c * sign(θ_i)
+        end
+    else
+        for i in eachindex(θ)
+            θ_i = θ[i]
+            v += abs(θ_i)
+            @inbounds g[i] = β * g[i] + c * sign(θ_i)
+        end
+    end
+    (c * v, g)
 end
 
 function prox!{T<:BlasReal}(f::L1Reg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
@@ -104,6 +144,31 @@ function addgrad!{T<:BlasReal,N}(f::ElasticReg{T}, β::T, g::StridedArray{T,N}, 
         end
     end
     g
+end
+
+function value_and_addgrad!{T<:BlasReal,N}(f::ElasticReg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N})
+    @_checkdims length(g) == length(θ)
+    c1 = f.c1 * α
+    c2 = f.c2 * α
+
+    v1 = zero(T)
+    v2 = zero(T)
+    if β == zero(T)
+        @inbounds for i in eachindex(θ)
+            θ_i = θ[i]
+            v1 += abs(θ_i)
+            v2 += abs2(θ_i)
+            g[i] = c1 * sign(θ_i) + c2 * θ_i
+        end
+    else
+        @inbounds for i in eachindex(θ)
+            θ_i = θ[i]
+            v1 += abs(θ_i)
+            v2 += abs2(θ_i)
+            g[i] = β * g[i] + (c1 * sign(θ_i) + c2 * θ_i)
+        end
+    end
+    (c1 * v1 + half(c2 * v2), g)
 end
 
 function prox!{T<:BlasReal}(f::ElasticReg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
