@@ -12,6 +12,20 @@ prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ, 1.0)
 prox(f::Regularizer, θ::StridedArray, λ::Real) = prox!(f, similar(θ), θ, λ)
 
 
+## ZeroReg: 0
+
+immutable ZeroReg <: Regularizer
+end
+
+value{T<:Real}(::ZeroReg, θ::StridedArray{T}) = zero(T)
+
+value_and_addgrad!{T<:Real,N}(::ZeroReg, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N}) =
+    (zero(T), g)
+
+prox!{T<:Real}(r::StridedArray{T}, θ::StridedArray{T}, λ::Real) =
+    copy!(r, θ)
+
+
 ## SqrL2Reg: (c/2) * ||θ||_2^2
 
 immutable SqrL2Reg{T<:FloatingPoint} <: Regularizer

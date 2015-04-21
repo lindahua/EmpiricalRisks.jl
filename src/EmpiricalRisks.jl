@@ -63,6 +63,7 @@ export
     # regularizers
 
     Regularizer,
+    ZeroReg,
     SqrL2Reg,
     L1Reg,
     ElasticReg,
