@@ -58,8 +58,6 @@ export
     RiskModel,
     SupervisedRiskModel,
     riskmodel,
-    risk,
-    addgrad!,
     value_and_addgrad!,
 
     # regularizers

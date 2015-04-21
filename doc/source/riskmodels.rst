@@ -42,7 +42,7 @@ When a set of inputs and the corresponding outputs are given, the *risk model* c
 
 The package provides methods for computing the *total risk* and the derivative of the total risk *w.r.t.* the parameter.
 
-.. function:: risk(rmodel, theta, x, y)
+.. function:: value(rmodel, theta, x, y)
 
     Compute the total risk *w.r.t.* the risk model `rmodel`, given
 
@@ -75,33 +75,26 @@ The package provides methods for computing the *total risk* and the derivative o
         risk(rmodel, theta, X, Y)  # evaluate the total risk on (X, Y)
 
 
-.. function:: addgrad!(rmodel, beta, g, alpha, theta, x, y)
+.. function:: value_and_addgrad!(rmodel, beta, g, alpha, theta, x, y)
 
-    Compute the gradient of the total risk on ``x`` and ``y``, *w.r.t.* the parameter ``theta``, and add it to ``g`` in the following manner:
+    Compute the total risk on ``x`` and ``y``, and its gradient *w.r.t.* the parameter ``theta``, and add it to ``g`` in the following manner:
 
     .. math::
 
         g \leftarrow \beta g + \alpha \nabla_\theta \mathrm{Risk}(x, y; \theta)
 
-
-    Here, ``x`` and ``y`` can be a single sample or a set of multiple samples.
+    Here, ``x`` and ``y`` can be a single sample or a set of multiple samples. The function returns both the evaluated value and ``g`` as a 2-tuple.
 
     .. note::
 
         When ``beta`` is zero, the computed gradient (or its scaled version) will be written to ``g`` without using the original data in ``g`` (in this case, ``g`` need not be initialized).
 
 
-.. function:: grad(rmodel, theta, x, y)
+.. function:: value_and_grad(rmodel, theta, x, y)
 
     Compute and return the gradient of the total risk on ``x`` and ``y``, *w.r.t.* the parameter ``g``.
 
-    This is just a thin wrapper of ``addgrad!``:
-
-    .. code-block:: julia
-
-        grad(rm::SupervisedRiskModel, theta, x, y) =
-            addgrad!(rm, zero(eltype(theta)), similar(theta),
-                     one(eltype(theta)), theta, x, y)
+    This is just a thin wrapper of ``value_and_addgrad!``.
 
 
 Note that the ``addgrad!`` method is provided for risk model with certain combinations of prediction models and loss functions. Below is a list of combinations that we currently support:

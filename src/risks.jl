@@ -12,9 +12,7 @@ riskmodel{N,M}(pm::PredictionModel{N,M}, loss::Loss{M}) =
 
 ### generic functions
 
-grad(rm::SupervisedRiskModel, θ, x, y) = addgrad!(rm, zero(eltype(θ)), similar(θ), one(eltype(θ)), θ, x, y)
-
-function risk{PM<:PredictionModel,L<:Loss}(rm::SupervisedRiskModel{PM,L}, θ, x, y)
+function value{PM<:PredictionModel,L<:Loss}(rm::SupervisedRiskModel{PM,L}, θ, x, y)
     pm = rm.predmodel
     loss = rm.loss
     if size(x) == inputsize(pm)
@@ -32,12 +30,14 @@ function risk{PM<:PredictionModel,L<:Loss}(rm::SupervisedRiskModel{PM,L}, θ, x,
     end
 end
 
+value_and_grad(rm::SupervisedRiskModel, θ, x, y) = value_and_addgrad!(rm, zero(eltype(θ)), similar(θ), one(eltype(θ)), θ, x, y)
+
 
 ### Univariate prediction + Univariate loss
 
-function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearPred,L},
-                                                 β::Real, g::StridedVector{T},
-                                                 α::Real, θ::StridedVector{T}, x::StridedVector{T}, y::Real)
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearPred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedVector{T}, y::Real)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -45,14 +45,15 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearP
     @assert n == 1
 
     p = dot(θ, x)
-    dv = deriv(loss, p, y)
-    axpby!(convert(T, α * dv), x, convert(T, β), g)
-    g
+    v, dv = value_and_deriv(loss, p, y)
+    α_ = convert(T, α)
+    axpby!(convert(T, α_ * dv), x, convert(T, β), g)
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearPred,L},
-                                                 β::Real, g::StridedVector{T},
-                                                 α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearPred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
 
     pm = rm.predmodel
     loss = rm.loss
@@ -62,16 +63,20 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearP
 
     u = x'θ
     @assert length(u) == n
+    v = zero(T)
     @inbounds for i = 1:n
-        u[i] = deriv(loss, u[i], y[i])
+        v_i, u_i = value_and_deriv(loss, u[i], y[i])
+        v += v_i
+        u[i] = u_i
     end
-    gemv!('N', convert(T, α), x, u, convert(T, β), g)
-    g
+    α_ = convert(T, α)
+    gemv!('N', α_, x, u, convert(T, β), g)
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffinePred,L},
-                                                 β::Real, g::StridedVector{T},
-                                                 α::Real, θ::StridedVector{T}, x::StridedVector{T}, y::Real)
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffinePred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedVector{T}, y::Real)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -80,7 +85,7 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffineP
 
     d = inputlen(pm)
     p = predict(pm, θ, x)
-    dv = deriv(loss, p, y)
+    v, dv = value_and_deriv(loss, p, y)
     α_ = convert(T, α)
     β_ = convert(T, β)
     axpby!(α_ * dv, x, β_, view(g, 1:d))
@@ -90,12 +95,12 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffineP
     else
         g[d+1] = β_ * g[d+1] + α_ * gb
     end
-    g
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffinePred,L},
-                                                 β::Real, g::StridedVector{T},
-                                                 α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffinePred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -105,8 +110,11 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffineP
     d = inputlen(pm)
     u = predict(pm, θ, x)
     @assert length(u) == n
+    v = zero(T)
     @inbounds for i = 1:n
-        u[i] = deriv(loss, u[i], y[i])
+        v_i, u_i = value_and_deriv(loss, u[i], y[i])
+        v += v_i
+        u[i] = u_i
     end
     α_ = convert(T, α)
     β_ = convert(T, β)
@@ -117,15 +125,15 @@ function addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffineP
     else
         g[d+1] = β_ * g[d+1] + α_ * gb
     end
-    g
+    (α_ * v, g)
 end
 
 
 ### Multivariate prediction + Multivariate loss
 
-function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLinearPred,L},
-                                                   β::Real, g::StridedMatrix{T},
-                                                   α::Real, θ::StridedMatrix{T}, x::StridedVector{T}, y)
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLinearPred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedVector{T}, y)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -133,14 +141,15 @@ function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLin
     @assert n == 1
 
     u = predict(pm, θ, x)
-    grad!(loss, u, u, y)
-    gemm!('N', 'T', convert(T, α), u, x, convert(T, β), g)
-    g
+    v, _ = value_and_grad!(loss, u, u, y)
+    α_ = convert(T, α)
+    gemm!('N', 'T', α_, u, x, convert(T, β), g)
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLinearPred,L},
-                                                   β::Real, g::StridedMatrix{T},
-                                                   α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLinearPred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
 
     pm = rm.predmodel
     loss = rm.loss
@@ -150,17 +159,20 @@ function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLin
 
     u = predict(pm, θ, x)
     @assert size(u, 2) == n
+    v = zero(T)
     for i = 1:n
         u_i = view(u,:,i)
-        grad!(loss, u_i, u_i, gets(y,i))
+        v_i, _ = value_and_grad!(loss, u_i, u_i, gets(y,i))
+        v += v_i
     end
-    gemm!('N', 'T', convert(T, α), u, x, convert(T, β), g)
-    g
+    α_ = convert(T, α)
+    gemm!('N', 'T', α_, u, x, convert(T, β), g)
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
-                                                   β::Real, g::StridedMatrix{T},
-                                                   α::Real, θ::StridedMatrix{T}, x::StridedVector{T}, y)
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedVector{T}, y)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -168,18 +180,18 @@ function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAff
     @assert n == 1
 
     u = predict(pm, θ, x)
-    grad!(loss, u, u, y)
+    v, _ = value_and_grad!(loss, u, u, y)
     d = inputlen(pm)
     α_ = convert(T, α)
     β_ = convert(T, β)
     gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
-    axpby!(convert(T, α * pm.bias), u, β_, view(g, :, d+1))
-    g
+    axpby!(convert(T, α_ * pm.bias), u, β_, view(g, :, d+1))
+    (α_ * v, g)
 end
 
-function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
-                                                   β::Real, g::StridedMatrix{T},
-                                                   α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
 
     pm = rm.predmodel
     loss = rm.loss
@@ -189,14 +201,16 @@ function addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAff
 
     u = predict(pm, θ, x)
     @assert size(u, 2) == n
+    v = zero(T)
     for i = 1:n
         u_i = view(u,:,i)
-        grad!(loss, u_i, u_i, gets(y,i))
+        v_i, _ = value_and_grad!(loss, u_i, u_i, gets(y,i))
+        v += v_i
     end
     d = inputlen(pm)
     α_ = convert(T, α)
     β_ = convert(T, β)
     gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
-    axpby!(convert(T, α * pm.bias), vec(sum(u,2)), β_, view(g, :, d+1))
-    g
+    axpby!(convert(T, α_ * pm.bias), vec(sum(u,2)), β_, view(g, :, d+1))
+    (α_ * v, g)
 end

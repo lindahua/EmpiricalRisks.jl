@@ -4,61 +4,15 @@ import EmpiricalRisks: gets
 
 ## auxiliary testing facilities
 
-function _addgrad(pm::PredictionModel, loss::Loss,
-                  β::Float64, g0::StridedVecOrMat, α::Float64, θ::StridedVecOrMat, X, y)
-
-    rm = riskmodel(pm, loss)
-    addgrad!(rm, β, copy(g0), α, θ, X, y)
+function _val_and_addgrad(rm::SupervisedRiskModel,
+                          β::Float64, g0::StridedVecOrMat, α::Float64, θ::StridedVecOrMat, X, y)
+    value_and_addgrad!(rm, β, copy(g0), α, θ, X, y)
 end
-
-
-function verify_risk_values(pm::PredictionModel, loss::Loss,
-                      θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat, rr::Vector{Float64})
-
-    n = size(X, 2)
-    rm = riskmodel(pm, loss)
-
-    # over individual samples
-    for i = 1:n
-        x_i = gets(X, i)
-        y_i = gets(y, i)
-        @test_approx_eq rr[i] risk(rm, θ, x_i, y_i)
-    end
-
-    # over sample batch
-    @test_approx_eq sum(rr) risk(rm, θ, X, y)
-end
-
-function verify_risk_grads(pm::PredictionModel, loss::Loss,
-                           θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat, G::Array{Float64})
-
-    n = size(X, 2)
-    rm = riskmodel(pm, loss)
-    g0 = randn(size(θ))
-
-    # over individual samples
-    for i = 1:n
-        x_i = gets(X, i)
-        y_i = gets(y, i)
-        g_i = gets(G, i)
-        @test_approx_eq g_i grad(rm, θ, x_i, y_i)
-        @test_approx_eq g0 + g_i _addgrad(pm, loss, 1.0, g0, 1.0, θ, x_i, y_i)
-        @test_approx_eq g0 + 2.0 * g_i _addgrad(pm, loss, 1.0, g0, 2.0, θ, x_i, y_i)
-        @test_approx_eq 0.4 * g0 + 0.8 * g_i _addgrad(pm, loss, 0.4, g0, 0.8, θ, x_i, y_i)
-    end
-
-    # over sample batch
-    g = gets(sum(G, ndims(G)), 1)
-    @test_approx_eq g grad(rm, θ, X, y)
-    @test_approx_eq g0 + g _addgrad(pm, loss, 1.0, g0, 1.0, θ, X, y)
-    @test_approx_eq g0 + 2.0 * g _addgrad(pm, loss, 1.0, g0, 2.0, θ, X, y)
-    @test_approx_eq 0.4 * g0 + 0.8 * g _addgrad(pm, loss, 0.4, g0, 0.8, θ, X, y)
-end
-
 
 function verify_risk(pm::PredictionModel, loss::Loss,
                      θ::VecOrMat{Float64}, X::Matrix{Float64}, y::VecOrMat)
 
+    rm = riskmodel(pm, loss)
 
     # produce ground-truth
     n = size(X, 2)
@@ -85,9 +39,47 @@ function verify_risk(pm::PredictionModel, loss::Loss,
     end
 
     # perform verification
-    verify_risk_values(pm, loss, θ, X, y, R0)
-    verify_risk_grads(pm, loss, θ, X, y, G0)
+
+    # over individual samples
+    g0 = rand(size(θ))
+
+    for i = 1:n
+        x_i = gets(X, i)
+        y_i = gets(y, i)
+        g_i = gets(G0, i)
+        v_i = R0[i]
+
+        @test_approx_eq v_i value(rm, θ, x_i, y_i)
+
+        v, g = value_and_grad(rm, θ, x_i, y_i)
+        @test_approx_eq v_i v
+        @test_approx_eq g_i g
+
+        for β in [0.0, 0.5, 1.0], α in [0.5, 1.0, 2.0]
+            v, g = _val_and_addgrad(rm, β, g0, α, θ, x_i, y_i)
+            @test_approx_eq α * v_i v
+            @test_approx_eq β * g0 + α * g_i g
+        end
+    end
+
+    # over sample batch
+    rv = sum(R0)
+    rg = gets(sum(G0, ndims(G0)), 1)
+
+    @test_approx_eq rv value(rm, θ, X,y)
+
+    v, g = value_and_grad(rm, θ, X, y)
+    @test_approx_eq rv v
+    @test_approx_eq rg g
+
+    for β in [0.0, 0.5, 1.0], α in [0.5, 1.0, 2.0]
+        v, g = _val_and_addgrad(rm, β, g0, α, θ, X, y)
+        @test_approx_eq α * rv v
+        @test_approx_eq β * g0 + α * rg g
+    end
 end
+
+
 
 ## (safe) reference implementation to compare with
 

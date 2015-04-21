@@ -14,9 +14,9 @@ Each regularizer type implements the following methods:
 
     Evaluate the regularization value at ``theta`` and return the value.
 
-.. function:: addgrad!(reg, beta, g, alpha, theta)
+.. function:: value_and_addgrad!(reg, beta, g, alpha, theta)
 
-    Compute the gradient *w.r.t.* ``theta`` and add it to ``g`` in the following way:
+    Compute the regularization value, and its gradient *w.r.t.* ``theta`` and add it to ``g`` in the following way:
 
     .. math::
 
@@ -40,11 +40,11 @@ Each regularizer type implements the following methods:
 
 In addition, the package also provides a set of generic wrappers to simplify some use cases.
 
-.. function:: grad(reg, theta)
+.. function:: value_and_grad(reg, theta)
 
-    Compute and return the gradient *w.r.t.* ``theta``.
+    Compute and return the regularization value and its gradient *w.r.t.* ``theta``.
 
-    This is a wrapper of ``addgrad!``.
+    This is a wrapper of ``value_and_addgrad!``.
 
 .. function:: prox(reg, theta[, lambda])
 
