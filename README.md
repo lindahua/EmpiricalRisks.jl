@@ -6,6 +6,13 @@ This Julia package provides a collection of predictors and loss functions, mainl
 [![Build Status](https://travis-ci.org/lindahua/EmpiricalRisks.jl.svg?branch=master)](https://travis-ci.org/lindahua/EmpiricalRisks.jl)
 [![EmpiricalRisks](http://pkg.julialang.org/badges/EmpiricalRisks_release.svg)](http://pkg.julialang.org/?pkg=EmpiricalRisks&ver=release)
 
+
+Currently, the following higher-level packages are depending on *EmpiricalRisks*:
+
+- [Regression:](https://github.com/lindahua/Regression.jl) solving moderate-size problem using conventional optimization techniques.
+- [SGDOptim:](https://github.com/lindahua/SGDOptim.jl) solving large-scale problem using stochastic gradient descent or its variants.
+
+
 ## Overview
 
 This package provides basic components for implementing regularized empirical risk minimization:
