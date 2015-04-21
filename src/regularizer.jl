@@ -11,6 +11,12 @@ prox!(f::Regularizer, θ::StridedArray) = prox!(f, θ, θ)
 prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ, 1.0)
 prox(f::Regularizer, θ::StridedArray, λ::Real) = prox!(f, similar(θ), θ, λ)
 
+function value_and_grad!{T<:FloatingPoint,N}(rm::RiskModel, reg::Regularizer, g::StridedArray{T,N}, θ::StridedArray{T,N}, X, y)
+    v_risk, _ = value_and_addgrad!(rm, zero(T), g, one(T), θ, X, y)
+    v_regr, _ = value_and_addgrad!(reg, one(T), g, one(T), θ)
+    return (v_risk + v_regr, g)
+end
+
 
 ## ZeroReg: 0
 
