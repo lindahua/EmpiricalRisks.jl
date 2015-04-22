@@ -34,3 +34,5 @@ gets{T}(x::StridedArray{T,3}, i::Int) = view(x,:,:,i)
 
 shrink{T<:FloatingPoint}(x::T, t::T) = (x > t ? x - t : x < -t ? x + t : zero(T))
 shrink{T<:FloatingPoint}(x::StridedVector{T}, t::T) = T[shrink(v, t) for v in x]
+
+no_op(args...) = nothing

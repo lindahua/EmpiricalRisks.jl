@@ -30,3 +30,4 @@ Contents:
    loss.rst
    riskmodels.rst
    regularizers.rst
+   misc.rst

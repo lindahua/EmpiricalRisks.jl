@@ -58,6 +58,21 @@ Predefined Regularizers
 
 The package provides several commonly used regularizers:
 
+Zero Regularizer
+~~~~~~~~~~~~~~~~~
+
+The *zero regularizer* always yields the zero value, which is mainly used to supply an regularizer argument to functions to request it (but you do not intend to impose any regularization).
+
+.. math::
+
+    reg(\theta) = 0
+
+.. code-block:: julia
+
+    immutable ZeroReg <: Regularizer end
+
+
+
 Squared L2 Regularizer
 ~~~~~~~~~~~~~~~~~~~~~~~
 

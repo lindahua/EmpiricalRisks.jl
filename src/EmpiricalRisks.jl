@@ -8,6 +8,10 @@ import Base.LinAlg.BLAS: axpy!, gemv!, gemm!
 
 export
 
+    ## common.jl
+    no_op,
+    shrink,
+
     ## loss.jl
 
     Loss,
