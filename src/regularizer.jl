@@ -28,7 +28,7 @@ value{T<:Real}(::ZeroReg, θ::StridedArray{T}) = zero(T)
 value_and_addgrad!{T<:Real,N}(::ZeroReg, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N}) =
     (zero(T), g)
 
-prox!{T<:Real}(r::StridedArray{T}, θ::StridedArray{T}, λ::Real) =
+prox!{T<:Real}(::ZeroReg, r::StridedArray{T}, θ::StridedArray{T}, λ::Real) =
     copy!(r, θ)
 
 
