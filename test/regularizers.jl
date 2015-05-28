@@ -66,3 +66,100 @@ verify_reg(ElasticReg(c1, c2), g0, θ,
     shrink(1.0 / (1.0 + c2) * θ, c1 / (1.0 + c2)))
 
 @test_approx_eq prox(ElasticReg(c1, c2), θ, 1.5) prox(ElasticReg(1.5 * c1, 1.5 * c2), θ)
+
+
+# Projection regularizers: NonNegReg, SimplexReg, L1BallReg
+
+reg = NonNegReg()
+
+θ = [0.1, 0.9]
+@test value(reg, θ) == 0.
+@test_throws ErrorException value_and_addgrad!(reg, 0., similar(θ), 1., θ) 
+@test prox!(reg, θ, θ, 1.0) == [0.1, 0.9]
+
+θ = [0.2, -0.5]
+@test value(reg, θ) == Inf 
+@test prox!(reg, θ, θ, 1.0) == [0.2, 0.]
+
+θ = [0., -1., 4., -0.1]
+@test value(reg, θ) == Inf
+@test prox!(reg, θ, θ, 1.0) == [0., 0., 4., 0.]
+
+θ = [0. 1. ; -1. 0]
+@test value(reg, θ) == Inf  
+@test prox!(reg, θ, θ, 1.0) == [0. 1. ; 0. 0.]
+
+θ = [0. 0.5 ; 0.5 0.]
+θ1 = EmpiricalRisks.view(θ, :, 2)
+θ2 = similar(θ1)
+@test value(reg, θ1) == 0. 
+@test prox!(reg, θ2, θ1, 1.0) == [0.5, 0.]
+
+θ1 = EmpiricalRisks.view(θ, 1, :)
+θ2 = similar(θ1)
+@test value(reg, θ1) == 0.
+@test prox!(reg, θ2, θ1, 1.0) == [0. 0.5]
+
+
+
+reg = SimplexReg(1.0)
+
+θ = [0.1, 0.9]
+@test value(reg, θ) == 0.
+@test_throws ErrorException value_and_addgrad!(reg, 0., similar(θ), 1., θ) 
+@test prox!(reg, θ, θ, 1.0) == [0.1, 0.9]
+
+θ = [0., 0.]
+@test value(reg, θ) == Inf
+@test prox!(reg, θ, θ, 1.0) == [0.5, 0.5]
+
+θ = [0., -1., 4., -0.1]
+@test value(reg, θ) == Inf  
+@test prox!(reg, θ, θ, 1.0) == [0., 0., 1., 0.]
+
+θ = [0. 1. ; 1. 0]
+@test value(reg, θ) == Inf
+@test prox!(reg, θ, θ, 1.0) == [0. 0.5 ; 0.5 0.]
+
+θ = [0. 0.5 ; 0.5 0.]
+θ1 = EmpiricalRisks.view(θ, :, 2)
+θ2 = similar(θ1)
+@test value(reg, θ1) == Inf
+@test prox!(reg, θ2, θ1, 1.0) == [0.75, 0.25]
+
+θ1 = EmpiricalRisks.view(θ, 1, :)
+θ2 = similar(θ1)
+@test value(reg, θ1) == Inf
+@test prox!(reg, θ2, θ1, 1.0) == [0.25 0.75]
+
+
+
+reg = L1BallReg(1.0)
+
+θ = [0.1, 0.9]
+@test value(reg, θ) == 0.
+@test_throws ErrorException value_and_addgrad!(reg, 0., similar(θ), 1., θ) 
+@test prox!(reg, θ, θ, 1.0) == [0.1, 0.9]
+
+θ = [0.2, -0.5]
+@test value(reg, θ) == 0. 
+@test prox!(reg, θ, θ, 1.0) == [0.2, -0.5]
+
+θ = [0., -1., 4., -0.1]
+@test value(reg, θ) == Inf
+@test prox!(reg, θ, θ, 1.0) == [0., 0., 1., 0.]
+
+θ = [0. 1. ; -1. 0]
+@test value(reg, θ) == Inf  
+@test prox!(reg, θ, θ, 1.0) == [0. 0.5 ; -0.5 0]
+
+θ = [0. 0.5 ; 0.5 0.]
+θ1 = EmpiricalRisks.view(θ, :, 2)
+θ2 = similar(θ1)
+@test value(reg, θ1) == 0. 
+@test prox!(reg, θ2, θ1, 1.0) == [0.5, 0.]
+
+θ1 = EmpiricalRisks.view(θ, 1, :)
+θ2 = similar(θ1)
+@test value(reg, θ1) == 0.
+@test prox!(reg, θ2, θ1, 1.0) == [0. 0.5]

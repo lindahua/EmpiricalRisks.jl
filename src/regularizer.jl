@@ -164,3 +164,190 @@ function prox!{T<:BlasReal}(f::ElasticReg{T}, r::StridedArray{T}, θ::StridedArr
     end
     r
 end
+
+
+
+
+## NonNegReg: θ[i] >= 0 ∀ i 
+immutable NonNegReg <: Regularizer
+end
+
+function value{T<:Real}(::NonNegReg, θ::StridedArray{T})
+    s = zero(T)
+    @inbounds for i in eachindex(θ)
+        θ[i] < s && return Inf      # value = + Inf if outside domain
+    end
+    s   # value = 0. otherwise
+end
+
+value_and_addgrad!{T<:Real,N}(::NonNegReg, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N}) =
+    error("Gradient undefined for the NonNegReg regularizer")
+
+#  NOTE : λ is ignored
+function prox!{T<:Real}(::NonNegReg, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
+    @_checkdims size(r) == size(θ)
+    c = convert(T, λ)
+    s = zero(T)
+    for i in eachindex(θ)
+        r[i] = θ[i] < s ? s : θ[i]
+    end
+    r    
+end
+
+
+## Simplex: Σ θ[i] = c, θ[i] >= 0 ∀ i 
+immutable SimplexReg{T<:FloatingPoint} <: Regularizer
+    c::T
+end
+
+SimplexReg{T<:FloatingPoint}(c::T=1.0) = SimplexReg{T}(c)
+
+function value{T<:BlasReal}(f::SimplexReg{T}, θ::StridedArray{T})
+    z = zero(T)
+    s = zero(T)
+    @inbounds for i in eachindex(θ)
+        θ[i] < z && return Inf       # value = + Inf if outside domain
+        s += θ[i]
+    end
+
+    return abs(s - f.c) <= 1.0e-12 ? z : Inf
+end
+
+value_and_addgrad!{T<:BlasReal,N}(f::SimplexReg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N}) =
+    error("Gradient undefined for the SimplexReg regularizer")
+
+# Source = Efficient Projections on the l1-Ball for Learning in High Dimensions - J.Duchi
+# Note : λ is ignored
+function prox!{T<:BlasReal}(f::SimplexReg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
+    @_checkdims size(r) == size(θ)
+
+    z  = zero(T)
+    ρ, s = 0, z
+    U  = [1:length(θ);]
+    cU = length(θ)
+
+    # pivot search by divide and conquer
+    while cU > 0
+        k  = U[rand(1:cU)]  # pick an element at random
+        vk = θ[k]
+        dρ, ds = 0, z
+        @inbounds for i in 1:cU
+            j = U[i]
+            θ[j] >= vk || continue
+            dρ += 1
+            ds += θ[j]
+        end            
+
+        if (s+ds) - (ρ+dρ)*vk < f.c
+            s += ds
+            ρ += dρ
+            nCu = 0
+            @inbounds for i in 1:cU
+                j = U[i]
+                θ[j] < vk || continue
+                nCu += 1 
+                U[nCu] = U[i]
+            end
+            cU = nCu
+        else
+            nCu = 0
+            @inbounds for i in 1:cU
+                j = U[i]
+                θ[j] >= vk || continue
+                j != k     || continue
+                nCu += 1 
+                U[nCu] = U[i]
+            end
+            cU = nCu
+        end
+    end
+
+    # apply pivot
+    @inbounds for i in eachindex(θ)
+        r[i]  = max( θ[i] - (s - f.c)/ρ, z )
+    end
+    r
+
+    r
+end
+
+
+## L1Ball: Σ |θ[i]| = c
+immutable L1BallReg{T<:FloatingPoint} <: Regularizer
+    c::T
+end
+
+L1BallReg{T<:FloatingPoint}(c::T) = L1BallReg{T}(c)
+
+function value{T<:BlasReal}(f::L1BallReg{T}, θ::StridedArray{T})
+    z = zero(T)
+    s = zero(T)
+    @inbounds for i in eachindex(θ)
+        s += abs(θ[i])
+        s > f.c && return Inf
+    end
+
+    return z
+end
+
+value_and_addgrad!{T<:BlasReal,N}(f::L1BallReg{T}, β::T, g::StridedArray{T,N}, α::T, θ::StridedArray{T,N}) =
+    error("Gradient undefined for the L1BallReg regularizer")
+
+# Source = Efficient Projections on the l1-Ball for Learning in High Dimensions - J.Duchi
+# Note : λ is ignored
+function prox!{T<:BlasReal}(f::L1BallReg{T}, r::StridedArray{T}, θ::StridedArray{T}, λ::Real)
+    @_checkdims size(r) == size(θ)
+
+    z  = zero(T)
+    ρ, s = 0, z
+    U  = [1:length(θ);]
+    cU = length(θ)
+
+    # early exit if within limits
+    if sumabs(θ) <= f.c
+        copy!(r, θ)
+        return r
+    end
+
+    # pivot search by divide and conquer
+    while cU > 0
+        k  = U[rand(1:cU)]
+        vk = abs(θ[k])
+        dρ, ds = 0, z
+        @inbounds for i in 1:cU
+            j = U[i]
+            abs(θ[j]) >= vk || continue
+            dρ += 1
+            ds += abs(θ[j])
+        end            
+
+        if (s+ds) - (ρ+dρ)*vk < f.c
+            s += ds
+            ρ += dρ
+            nCu = 0
+            @inbounds for i in 1:cU
+                j = U[i]
+                abs(θ[j]) < vk || continue
+                nCu += 1 
+                U[nCu] = U[i]
+            end
+            cU = nCu
+        else
+            nCu = 0
+            @inbounds for i in 1:cU
+                j = U[i]
+                abs(θ[j]) >= vk || continue
+                j != k || continue
+                nCu += 1 
+                U[nCu] = U[i]
+            end
+            cU = nCu
+        end
+    end
+
+    # apply pivot
+    @inbounds for i in eachindex(θ)
+        r[i]  = sign(θ[i]) * max( abs(θ[i]) - (s - f.c)/ρ, z )
+    end
+    r
+end

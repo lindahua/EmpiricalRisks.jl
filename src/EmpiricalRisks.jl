@@ -71,6 +71,9 @@ export
     SqrL2Reg,
     L1Reg,
     ElasticReg,
+    NonNegReg,
+    SimplexReg,
+    L1BallReg,
 
     prox, prox!
 
