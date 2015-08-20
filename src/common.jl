@@ -20,7 +20,7 @@ function axpby!{T<:BlasReal}(a::T, x::StridedVector{T}, b::T, y::StridedVector{T
         axpy!(a, x, y)
     else
         n = length(x)
-        length(y) == n || throw(DimensionMismatch())
+        @_checkdims length(y) == n
         @inbounds for i = 1:n
             y[i] = a * x[i] + b * y[i]
         end
