@@ -30,6 +30,7 @@ export
     MultiLogisticLoss,
 
     value,
+    value!,
     deriv,
     grad,
     grad!,
@@ -56,6 +57,7 @@ export
     ninputs,
     isvalidparam,
     predict,
+    predict!,
 
     # risks
 
