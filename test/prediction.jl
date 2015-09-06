@@ -12,6 +12,9 @@ function verify_multipred(pred::PredictionModel{1,0}, θ, X::DenseMatrix)
         rr[i] = predict(pred, θ, X[:,i])
     end
     @test_approx_eq predict(pred, θ, X) rr
+
+    buffer = zeros(n)
+    @test_approx_eq predict!(buffer, pred, θ, X) rr
 end
 
 function verify_multipred(pred::PredictionModel{1,1}, θ, X::DenseMatrix)
@@ -23,6 +26,9 @@ function verify_multipred(pred::PredictionModel{1,1}, θ, X::DenseMatrix)
         rr[:,i] = predict(pred, θ, X[:,i])
     end
     @test_approx_eq predict(pred, θ, X) rr
+
+    buffer = zeros(p, n)
+    @test_approx_eq predict!(buffer, pred, θ, X) rr
 end
 
 

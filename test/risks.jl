@@ -68,6 +68,9 @@ function verify_risk(pm::PredictionModel, loss::Loss,
 
     @test_approx_eq rv value(rm, θ, X,y)
 
+    buffer = ndims(θ) == 2 ? zeros(size(θ,1), size(X,2)) : zeros(size(X,2))
+    @test_approx_eq rv value!(buffer, rm, θ, X, y)
+
     v, g = value_and_grad(rm, θ, X, y)
     @test_approx_eq rv v
     @test_approx_eq rg g

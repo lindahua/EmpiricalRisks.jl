@@ -30,6 +30,19 @@ function value{PM<:PredictionModel,L<:Loss}(rm::SupervisedRiskModel{PM,L}, θ, x
     end
 end
 
+function value!{PM<:PredictionModel,L<:Loss,T<:BlasReal}(buffer, rm::SupervisedRiskModel{PM,L}, θ, X::StridedMatrix{T}, y)
+    pm = rm.predmodel
+    loss = rm.loss
+    n = ninputs(pm, X)
+    n == size(y, ndims(y)) || error("Unmatched inputs and outputs")
+    predict!(buffer, pm, θ, X)
+    @inbounds s = value(loss, gets(buffer,1), gets(y,1))
+    for i = 2:n
+        @inbounds s += value(loss, gets(buffer,i), gets(y,i))
+    end
+    s
+end
+
 value_and_grad(rm::SupervisedRiskModel, θ, x, y) = value_and_addgrad!(rm, zero(eltype(θ)), similar(θ), one(eltype(θ)), θ, x, y)
 
 
@@ -54,14 +67,20 @@ end
 function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{LinearPred,L},
                                                            β::Real, g::StridedVector{T},
                                                            α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
+    buffer = zeros(size(x,2))
+    value_and_addgrad!(buffer, rm, β, g, α, θ, x, y)
+end
 
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(buffer::StridedVecOrMat{T}, rm::SupervisedRiskModel{LinearPred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
     n = ninputs(pm, x)
     n == length(y) || error("Unmatched inputs and outputs.")
 
-    u = x'θ
+    u = predict!(buffer, pm, θ, x)
     @assert length(u) == n
     v = zero(T)
     @inbounds for i = 1:n
@@ -101,6 +120,13 @@ end
 function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskModel{AffinePred,L},
                                                            β::Real, g::StridedVector{T},
                                                            α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
+    buffer = zeros(size(x,2))
+    value_and_addgrad!(buffer, rm, β, g, α, θ, x, y)
+end
+
+function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(buffer::StridedVecOrMat{T}, rm::SupervisedRiskModel{AffinePred,L},
+                                                           β::Real, g::StridedVector{T},
+                                                           α::Real, θ::StridedVector{T}, x::StridedMatrix{T}, y::StridedVector)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
@@ -108,7 +134,7 @@ function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskMod
     n == length(y) || error("Unmatched inputs and outputs.")
 
     d = inputlen(pm)
-    u = predict(pm, θ, x)
+    u = predict!(buffer, pm, θ, x)
     @assert length(u) == n
     v = zero(T)
     @inbounds for i = 1:n
@@ -127,7 +153,6 @@ function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskMod
     end
     (α_ * v, g)
 end
-
 
 ### Multivariate prediction + Multivariate loss
 
@@ -150,14 +175,20 @@ end
 function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvLinearPred,L},
                                                              β::Real, g::StridedMatrix{T},
                                                              α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
+    buffer = zeros(size(θ,1), size(x,2))
+    value_and_addgrad!(buffer, rm, β, g, α, θ, x, y)
+end
 
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(buffer::StridedVecOrMat{T}, rm::SupervisedRiskModel{MvLinearPred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
     n = ninputs(pm, x)
     n == size(y, ndims(y)) || error("Unmatched inputs and outputs.")
 
-    u = predict(pm, θ, x)
+    u = predict!(buffer, pm, θ, x)
     @assert size(u, 2) == n
     v = zero(T)
     for i = 1:n
@@ -192,14 +223,20 @@ end
 function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskModel{MvAffinePred,L},
                                                              β::Real, g::StridedMatrix{T},
                                                              α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
+    buffer = zeros(size(θ,1), size(x,2))
+    value_and_addgrad!(buffer, rm, β, g, α, θ, x, y)
+end
 
+function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(buffer::StridedVecOrMat{T}, rm::SupervisedRiskModel{MvAffinePred,L},
+                                                             β::Real, g::StridedMatrix{T},
+                                                             α::Real, θ::StridedMatrix{T}, x::StridedMatrix{T}, y)
     pm = rm.predmodel
     loss = rm.loss
     @_checkdims size(g) == size(θ) == paramsize(pm)
     n = ninputs(pm, x)
     n == size(y, ndims(y)) || error("Unmatched inputs and outputs.")
 
-    u = predict(pm, θ, x)
+    u = predict!(buffer, pm, θ, x)
     @assert size(u, 2) == n
     v = zero(T)
     for i = 1:n
