@@ -42,13 +42,7 @@ function predict!{T<:BlasReal}(r::StridedVector{T}, pm::LinearPred, θ::StridedV
     d = pm.dim
     n = size(X,2)
     @_checkdims length(θ) == size(X,1) == pm.dim && n == length(r)
-    for col = 1:n
-        @inbounds r[col] = 0
-        for row = 1:d
-            @inbounds r[col] += X[row, col] * θ[row]
-        end
-    end
-    r
+    At_mul_B!(r, X, θ)
 end
 
 
@@ -146,15 +140,7 @@ function predict!{T<:BlasReal}(r::StridedMatrix{T}, pm::MvLinearPred, θ::Stride
     k = pm.k
     n = size(X,2)
     @_checkdims size(θ) == (k,d) && size(X,1) == d && size(r) == (k,n)
-    for row = 1:k
-        for col = 1:n
-            @inbounds r[row,col] = 0
-            for i = 1:d
-                @inbounds r[row,col] += θ[row,i] * X[i,col]
-            end
-        end
-    end
-    r
+    A_mul_B!(r, θ, X)
 end
 
 
