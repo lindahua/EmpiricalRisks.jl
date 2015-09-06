@@ -90,13 +90,9 @@ function predict!{T<:BlasReal}(r::StridedVector{T}, pm::AffinePred, θ::StridedV
     n = size(X,2)
     @_checkdims length(θ) == d + 1 && size(X,1) == d && n == length(r)
     b = convert(T, pm.bias) * θ[d+1]
-    for col = 1:n
-        @inbounds r[col] = b
-        for row = 1:d
-            @inbounds r[col] += X[row, col] * θ[row]
-        end
-    end
-    r
+    w = view(θ, 1:d)
+    At_mul_B!(r, X, w)
+    broadcast!(+, r, r, b)
 end
 
 
@@ -198,13 +194,12 @@ function predict!{T<:BlasReal}(r::StridedMatrix{T}, pm::MvAffinePred, θ::Stride
     n = size(X,2)
     @_checkdims size(θ) == (k,d+1) && size(X,1) == d && size(r) == (k,n)
     bias = convert(T, pm.bias)
-    for row = 1:k
-        for col = 1:n
-            @inbounds r[row,col] = bias * θ[row,d+1]
-            for i = 1:d
-                @inbounds r[row,col] += θ[row,i] * X[i,col]
-            end
-        end
+    W = view(θ, :, 1:d)
+    b = view(θ, :, d+1)
+    A_mul_B!(r, W, X)
+    bias = convert(T, pm.bias)
+    for i = 1:size(X,2)
+        axpy!(bias, b, view(r,:,i))
     end
     r
 end
