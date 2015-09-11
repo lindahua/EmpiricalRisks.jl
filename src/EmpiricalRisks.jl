@@ -23,6 +23,7 @@ export
     QuantileLoss,
     HuberLoss,
     HingeLoss,
+    SqrHingeLoss,
     SmoothedHingeLoss,
     LogisticLoss,
     SumLoss,
