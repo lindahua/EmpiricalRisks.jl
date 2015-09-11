@@ -125,12 +125,16 @@ end
 immutable SqrHingeLoss <: UnivariateLoss
 end
 
-value{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = nonneg(one(T) - y * p).^2
-deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = y * p < one(T) ? 2(p-y) : zero(T)
+function value{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
+    yp = y * p
+    yp >= one(T) ? zero(T) : half(abs2(nonneg(one(T) - yp)))
+end
+
+deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = y * p < one(T) ? (p - y) : zero(T)
 
 function value_and_deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
     yp = y * p
-    yp >= one(T) ? (zero(T), zero(T)) : ((one(T) - yp).^2, 2(p-y))
+    yp >= one(T) ? (zero(T), zero(T)) : (half(abs2(one(T) - yp)), (p - y))
 end
 
 
