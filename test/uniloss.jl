@@ -75,6 +75,12 @@ _hingef(u::Dual, y) = y * real(u) < 1.0 ? 1.0 - y * u : dual(0.0, 0.0)
 verify_uniloss(HingeLoss(), _hingef, -2.0:0.5:2.0, [-1.0, 1.0])
 
 
+# SquaredHingeLoss
+
+_sqrhingef(u::Dual, y) = y * real(u) < 1.0 ? .5(1.0 - y * u).^2 : dual(0.0, 0.0)
+verify_uniloss(SqrHingeLoss(), _sqrhingef, -2.0:0.5:2.0, [-1.0, 1.0])
+
+
 # SmoothedHingeLoss
 
 function _sm_hingef(h::Float64, u::Dual, y)

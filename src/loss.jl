@@ -102,7 +102,7 @@ end
 
 
 
-## Hinge loss (for SVM)
+## Hinge loss (for L1-SVM)
 #
 #   loss(p, y) := max(1 - y * p, 0)
 #
@@ -115,6 +115,26 @@ deriv{T<:BlasReal}(::HingeLoss, p::T, y::T) = y * p < one(T) ? -y : zero(T)
 function value_and_deriv{T<:BlasReal}(::HingeLoss, p::T, y::T)
     yp = y * p
     yp >= one(T) ? (zero(T), zero(T)) : (one(T) - yp, -y)
+end
+
+
+## Squared Hinge loss (for L2-SVM)
+#
+#   loss(p, y) := max(1 - y * p, 0)^2
+#
+immutable SqrHingeLoss <: UnivariateLoss
+end
+
+function value{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
+    yp = y * p
+    yp >= one(T) ? zero(T) : half(abs2(nonneg(one(T) - yp)))
+end
+
+deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = y * p < one(T) ? (p - y) : zero(T)
+
+function value_and_deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
+    yp = y * p
+    yp >= one(T) ? (zero(T), zero(T)) : (half(abs2(one(T) - yp)), (p - y))
 end
 
 
