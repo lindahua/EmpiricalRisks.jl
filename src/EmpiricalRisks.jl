@@ -60,6 +60,10 @@ export
     predict,
     predict!,
 
+    ## link.jl
+
+    LogitLink,
+
     # risks
 
     RiskModel,
@@ -84,6 +88,7 @@ export
 # source files
 include("common.jl")
 include("prediction.jl")
+include("link.jl")
 include("loss.jl")
 include("risks.jl")
 include("regularizer.jl")
