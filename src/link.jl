@@ -33,7 +33,7 @@ end
 
 for link = (:(LogitLink),)
     for op = (:(inputlen),:(inputsize),:(outputlen),:(outputsize),:(paramlen),:(paramsize))
-        eval(:(($op)(lm::$(link)) = ($op)(lm.predmodel)))
+        eval(:(($op{M<:PredictionModel{1,0}})(lm::$(link){M}) = ($op)(lm.predmodel)))
     end
-    eval(:((ninputs)(lm::$(link), x::StridedVecOrMat) = (ninputs)(lm.predmodel, x)))
+    eval(:((ninputs{M<:PredictionModel{1,0}})(lm::$(link){M}, x::StridedVecOrMat) = (ninputs)(lm.predmodel, x)))
 end
