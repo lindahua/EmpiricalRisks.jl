@@ -58,6 +58,16 @@ end
 verify_uniloss(QuantileLoss(0.3), (p, y) -> _quanlossf(0.3, p, y), -2.0:0.5:2.0, -1.0:0.5:1.0)
 verify_uniloss(QuantileLoss(0.5), (p, y) -> _quanlossf(0.5, p, y), -2.0:0.5:2.0, -1.0:0.5:1.0)
 
+# EpsilonInsLoss
+
+function _epsinsensf(eps::Float64, u::Dual, y)
+    a = abs(real(u) - y)
+    a > eps ? _abs(u - y) - eps : dual(0.0, 0.0)
+end
+
+verify_uniloss(EpsilonInsLoss(0.3), (p, y) -> _epsinsensf(0.3, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
+verify_uniloss(EpsilonInsLoss(0.5), (p, y) -> _epsinsensf(0.5, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
+
 # HuberLoss
 
 function _huberf(h::Float64, u::Dual, y)

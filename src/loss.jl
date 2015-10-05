@@ -66,6 +66,39 @@ function value_and_deriv{T<:BlasReal}(loss::QuantileLoss, p::T, y::T)
 end
 
 
+## Epsilon Insensitive loss (for support vector regression)
+#
+#   loss(p, y) := 0                   ... abs(y - p) <= eps
+#               = abs(y - p) - eps    ... otherwise
+#
+immutable EpsilonInsLoss <: UnivariateLoss
+    epsilon::Float64
+
+    function EpsilonInsLoss(epsilon::Real)
+        new(convert(Float64, epsilon))
+    end
+end
+
+function value{T<:BlasReal}(loss::EpsilonInsLoss, p::T, y::T)
+    eps = convert(T, loss.epsilon)
+    a = abs(p - y)
+    a > eps ? a - eps : zero(T)
+end
+
+function deriv{T<:BlasReal}(loss::EpsilonInsLoss, p::T, y::T)
+    eps = convert(T, loss.epsilon)
+    r = p - y
+    abs(r) > eps ? sign(r) : zero(T)
+end
+
+function value_and_deriv{T<:BlasReal}(loss::EpsilonInsLoss, p::T, y::T)
+    eps = convert(T, loss.epsilon)
+    r = p - y
+    a = abs(r)
+    a > eps ? (a - eps, sign(r)) : (zero(T), zero(T))
+end
+
+
 ## Huber loss (for regression, smoothed version of Abs loss)
 #
 #   loss(p, y) := (1/2) * (p - y)^2      ... (|p - y| <= h)
