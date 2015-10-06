@@ -78,18 +78,15 @@ end
 verify_uniloss(HuberLoss(0.3), (p, y) -> _huberf(0.3, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
 verify_uniloss(HuberLoss(0.5), (p, y) -> _huberf(0.5, p, y), -2.0:0.25:2.0, -1.0:0.5:1.0)
 
-
 # HingeLoss
 
 _hingef(u::Dual, y) = y * real(u) < 1.0 ? 1.0 - y * u : dual(0.0, 0.0)
 verify_uniloss(HingeLoss(), _hingef, -2.0:0.5:2.0, [-1.0, 1.0])
 
-
 # SquaredHingeLoss
 
-_sqrhingef(u::Dual, y) = y * real(u) < 1.0 ? .5(1.0 - y * u).^2 : dual(0.0, 0.0)
+_sqrhingef(u::Dual, y) = y * real(u) < 1.0 ? (1.0 - y * u).^2 : dual(0.0, 0.0)
 verify_uniloss(SqrHingeLoss(), _sqrhingef, -2.0:0.5:2.0, [-1.0, 1.0])
-
 
 # SmoothedHingeLoss
 

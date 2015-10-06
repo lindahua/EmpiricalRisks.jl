@@ -134,7 +134,6 @@ function value_and_deriv{T<:BlasReal}(loss::HuberLoss, p::T, y::T)
 end
 
 
-
 ## Hinge loss (for L1-SVM)
 #
 #   loss(p, y) := max(1 - y * p, 0)
@@ -160,14 +159,14 @@ end
 
 function value{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
     yp = y * p
-    yp >= one(T) ? zero(T) : half(abs2(nonneg(one(T) - yp)))
+    yp >= one(T) ? zero(T) : abs2(nonneg(one(T) - yp))
 end
 
-deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = y * p < one(T) ? (p - y) : zero(T)
+deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T) = y * p < one(T) ? 2(p - y) : zero(T)
 
 function value_and_deriv{T<:BlasReal}(::SqrHingeLoss, p::T, y::T)
     yp = y * p
-    yp >= one(T) ? (zero(T), zero(T)) : (half(abs2(one(T) - yp)), (p - y))
+    yp >= one(T) ? (zero(T), zero(T)) : (abs2(one(T) - yp), 2(p - y))
 end
 
 
