@@ -102,19 +102,22 @@ verify_uniloss(SmoothedHingeLoss(0.5), (p, y) -> _sm_hingef(0.5, p, y), -2.0:0.2
 
 # SqrSmoothedHingeLoss
 
-## Quadratically smoothed Hinge loss
-#
-#   loss(p, y) := 1/(2γ) * max(1 - y * p, 0)^2   ... y * p >= 1 - γ
-#                 1 - γ / 2 - p * y              ... otherwise
-#
 function _sqrsm_hingef(g::Float64, u::Dual, y)
     yu = y * real(u)
-    yu >= 1.0 - g ? (yu < 1.0 ? 0.5 / g * abs2(max(1.0 - y * u, 0.0)) : dual(0.0, 0.0)) : 1.0 - g / 2.0 - y * u
+    yu >= 1.0 - g ? (yu < 1.0 ? 0.5 / g * abs2(max(1.0 - y * u, dual(0.0, 0.0))) : dual(0.0, 0.0)) : 1.0 - g / 2.0 - y * u
 end
 
 verify_uniloss(SqrSmoothedHingeLoss(0.2), (p, y) -> _sqrsm_hingef(0.2, p, y), -2.0:0.5:2.0, [-1.0, 1.0])
 verify_uniloss(SqrSmoothedHingeLoss(2), (p, y) -> _sqrsm_hingef(2., p, y), -2.0:0.5:2.0, [-1.0, 1.0])
-verify_uniloss(ModifiedHuberLoss(), (p, y) -> _sqrsm_hingef(2., p, y), -2.0:0.5:2.0, [-1.0, 1.0])
+
+# ModifiedHuberLoss
+
+function _mod_huberf(u::Dual, y)
+    yu = y * real(u)
+    yu >= -1.0 ? abs2(max(1.0 - y * u, dual(0.0, 0.0))) : -4 * y * u
+end
+
+verify_uniloss(ModifiedHuberLoss(), (p, y) -> _mod_huberf(p, y), -2.0:0.5:2.0, [-1.0, 1.0])
 
 # LogisticLoss
 
