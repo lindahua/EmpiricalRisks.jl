@@ -32,9 +32,12 @@ This package provides basic components for implementing regularized empirical ri
   - [x] absolute loss
   - [x] quantile loss
   - [x] huber loss
+  - [x] epsilon insensitive loss
   - [x] hinge loss
   - [x] squared hinge loss
   - [x] smoothed hinge loss
+  - [x] quadratically smoothed hinge loss
+  - [x] modified huber loss
   - [x] logistic loss
   - [x] sum squared loss (for multivariate prediction)
   - [x] multinomial logistic loss

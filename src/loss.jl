@@ -219,6 +219,48 @@ function value_and_deriv{T<:BlasReal}(loss::SmoothedHingeLoss, p::T, y::T)
 end
 
 
+## Quadratically smoothed Hinge loss
+#
+#   loss(p, y) := 1/(2γ) * max(1 - y * p, 0)^2   ... y * p >= 1 - γ
+#                 1 - γ / 2 - p * y              ... otherwise
+#
+immutable SqrSmoothedHingeLoss <: UnivariateLoss
+    gamma::Float64
+
+    function SqrSmoothedHingeLoss(gamma::Real)
+        gamma > zero(gamma) || error("gamma must be a positive value.")
+        new(convert(Float64, gamma))
+    end
+end
+
+function value{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    yp >= one(T) - g ? half(abs2(nonneg(one(T) - yp)) / g) : one(T) - half(g) - yp
+end
+
+function deriv{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    yp >= one(T) - g ? (yp < one(T) ? (p - y) / g : zero(T)) : -y
+end
+
+function value_and_deriv{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    val = yp >= one(T) - g ? half(abs2(nonneg(one(T) - yp)) / g) : one(T) - half(g) - yp
+    der = yp >= one(T) - g ? (yp < one(T) ? (p - y) / g : zero(T)) : -y
+    (val, der)
+end
+
+
+## Modified Huber loss
+#
+#   loss(p, y) := 1/4 * max(1 - y * p, 0)^2
+#
+ModifiedHuberLoss() = SqrSmoothedHingeLoss(2.)
+
+
 ## Logistic loss (for logistic regression)
 #
 #   loss(p, y) := log(1 + exp(-y * p))
