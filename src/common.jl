@@ -32,7 +32,7 @@ gets(x::StridedVector, i::Int) = x[i]
 gets(x::StridedMatrix, i::Int) = view(x,:,i)
 gets{T}(x::StridedArray{T,3}, i::Int) = view(x,:,:,i)
 
-shrink{T<:FloatingPoint}(x::T, t::T) = (x > t ? x - t : x < -t ? x + t : zero(T))
-shrink{T<:FloatingPoint}(x::StridedVector{T}, t::T) = T[shrink(v, t) for v in x]
+shrink{T<:AbstractFloat}(x::T, t::T) = (x > t ? x - t : x < -t ? x + t : zero(T))
+shrink{T<:AbstractFloat}(x::StridedVector{T}, t::T) = T[shrink(v, t) for v in x]
 
 no_op(args...) = nothing

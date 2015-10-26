@@ -4,14 +4,14 @@ abstract Regularizer
 
 ## generic methods
 
-value_and_grad{T<:FloatingPoint}(f::Regularizer, θ::StridedArray{T}) = value_and_addgrad!(f, zero(T), similar(θ), one(T), θ)
+value_and_grad{T<:AbstractFloat}(f::Regularizer, θ::StridedArray{T}) = value_and_addgrad!(f, zero(T), similar(θ), one(T), θ)
 
 prox!(f::Regularizer, θ::StridedArray) = prox!(f, θ, θ)
 
 prox(f::Regularizer, θ::StridedArray) = prox!(f, similar(θ), θ, 1.0)
 prox(f::Regularizer, θ::StridedArray, λ::Real) = prox!(f, similar(θ), θ, λ)
 
-function value_and_grad!{T<:FloatingPoint,N}(rm::RiskModel, reg::Regularizer, g::StridedArray{T,N}, θ::StridedArray{T,N}, X, y)
+function value_and_grad!{T<:AbstractFloat,N}(rm::RiskModel, reg::Regularizer, g::StridedArray{T,N}, θ::StridedArray{T,N}, X, y)
     v_risk, _ = value_and_addgrad!(rm, zero(T), g, one(T), θ, X, y)
     v_regr, _ = value_and_addgrad!(reg, one(T), g, one(T), θ)
     return (v_risk + v_regr, g)
@@ -34,11 +34,11 @@ prox!{T<:Real}(::ZeroReg, r::StridedArray{T}, θ::StridedArray{T}, λ::Real) =
 
 ## SqrL2Reg: (c/2) * ||θ||_2^2
 
-immutable SqrL2Reg{T<:FloatingPoint} <: Regularizer
+immutable SqrL2Reg{T<:AbstractFloat} <: Regularizer
     c::T
 end
 
-SqrL2Reg{T<:FloatingPoint}(c::T) = SqrL2Reg{T}(c)
+SqrL2Reg{T<:AbstractFloat}(c::T) = SqrL2Reg{T}(c)
 
 value{T<:BlasReal}(f::SqrL2Reg{T}, θ::StridedArray{T}) = half(f.c * sumabs2(θ))
 
@@ -70,11 +70,11 @@ end
 
 ## L1Reg: c * ||θ||_1
 
-immutable L1Reg{T<:FloatingPoint} <: Regularizer
+immutable L1Reg{T<:AbstractFloat} <: Regularizer
     c::T
 end
 
-L1Reg{T<:FloatingPoint}(c::T) = L1Reg{T}(c)
+L1Reg{T<:AbstractFloat}(c::T) = L1Reg{T}(c)
 
 value{T<:BlasReal}(f::L1Reg{T}, θ::StridedArray{T}) = f.c * sumabs(θ)
 
@@ -110,12 +110,12 @@ end
 
 ## ElasticNet: c1 * ||θ||_1 + c2 * ||θ||_2^2
 
-immutable ElasticReg{T<:FloatingPoint} <: Regularizer
+immutable ElasticReg{T<:AbstractFloat} <: Regularizer
     c1::T
     c2::T
 end
 
-ElasticReg{T<:FloatingPoint}(c1::T, c2::T) = ElasticReg{T}(c1, c2)
+ElasticReg{T<:AbstractFloat}(c1::T, c2::T) = ElasticReg{T}(c1, c2)
 
 function value{T<:BlasReal}(f::ElasticReg{T}, θ::StridedArray{T})
     s = zero(T)
@@ -196,11 +196,11 @@ end
 
 
 ## Simplex: Σ θ[i] = c, θ[i] >= 0 ∀ i 
-immutable SimplexReg{T<:FloatingPoint} <: Regularizer
+immutable SimplexReg{T<:AbstractFloat} <: Regularizer
     c::T
 end
 
-SimplexReg{T<:FloatingPoint}(c::T=1.0) = SimplexReg{T}(c)
+SimplexReg{T<:AbstractFloat}(c::T=1.0) = SimplexReg{T}(c)
 
 function value{T<:BlasReal}(f::SimplexReg{T}, θ::StridedArray{T})
     z = zero(T)
@@ -273,11 +273,11 @@ end
 
 
 ## L1Ball: Σ |θ[i]| = c
-immutable L1BallReg{T<:FloatingPoint} <: Regularizer
+immutable L1BallReg{T<:AbstractFloat} <: Regularizer
     c::T
 end
 
-L1BallReg{T<:FloatingPoint}(c::T) = L1BallReg{T}(c)
+L1BallReg{T<:AbstractFloat}(c::T) = L1BallReg{T}(c)
 
 function value{T<:BlasReal}(f::L1BallReg{T}, θ::StridedArray{T})
     z = zero(T)
