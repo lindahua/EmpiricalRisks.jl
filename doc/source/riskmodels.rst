@@ -61,18 +61,18 @@ The package provides methods for computing the *total risk* and the derivative o
         #
         #   risk := (theta'x - y)^2 / 2
         #
-        rmodel = risk_model(LinearPred(5), SqrLoss())
+        rmodel = riskmodel(LinearPred(5), SqrLoss())
 
         theta = randn(5)  # parameter
         x = randn(5)      # a single input
         y = randn()       # a single output
 
-        risk(rmodel, theta, x, y)  # evaluate risk on a single sample (x, y)
+        value(rmodel, theta, x, y)  # evaluate risk on a single sample (x, y)
 
         X = randn(5, 8)   # a matrix of 8 inputs
         Y = randn(8)      # corresponding outputs
 
-        risk(rmodel, theta, X, Y)  # evaluate the total risk on (X, Y)
+        value(rmodel, theta, X, Y)  # evaluate the total risk on (X, Y)
 
 
 .. function:: value_and_addgrad!(rmodel, beta, g, alpha, theta, x, y)
