@@ -29,8 +29,8 @@ function axpby!{T<:BlasReal}(a::T, x::StridedVector{T}, b::T, y::StridedVector{T
 end
 
 gets(x::StridedVector, i::Int) = x[i]
-gets(x::StridedMatrix, i::Int) = view(x,:,i)
-gets{T}(x::StridedArray{T,3}, i::Int) = view(x,:,:,i)
+gets(x::StridedMatrix, i::Int) = Base.view(x,:,i)
+gets{T}(x::StridedArray{T,3}, i::Int) = Base.view(x,:,:,i)
 
 shrink{T<:AbstractFloat}(x::T, t::T) = (x > t ? x - t : x < -t ? x + t : zero(T))
 shrink{T<:AbstractFloat}(x::StridedVector{T}, t::T) = T[shrink(v, t) for v in x]
