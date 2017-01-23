@@ -90,15 +90,15 @@ reg = NonNegReg()
 @test prox!(reg, θ, θ, 1.0) == [0. 1. ; 0. 0.]
 
 θ = [0. 0.5 ; 0.5 0.]
-θ1 = EmpiricalRisks.view(θ, :, 2)
+θ1 = Base.view(θ, :, 2)
 θ2 = similar(θ1)
 @test value(reg, θ1) == 0. 
 @test prox!(reg, θ2, θ1, 1.0) == [0.5, 0.]
 
-θ1 = EmpiricalRisks.view(θ, 1, :)
+θ1 = Base.view(θ, 1, :)
 θ2 = similar(θ1)
 @test value(reg, θ1) == 0.
-@test prox!(reg, θ2, θ1, 1.0) == [0. 0.5]
+@test prox!(reg, θ2, θ1, 1.0) == [0., 0.5]
 
 
 
@@ -122,15 +122,15 @@ reg = SimplexReg(1.0)
 @test prox!(reg, θ, θ, 1.0) == [0. 0.5 ; 0.5 0.]
 
 θ = [0. 0.5 ; 0.5 0.]
-θ1 = EmpiricalRisks.view(θ, :, 2)
+θ1 = Base.view(θ, :, 2)
 θ2 = similar(θ1)
 @test value(reg, θ1) == Inf
 @test prox!(reg, θ2, θ1, 1.0) == [0.75, 0.25]
 
-θ1 = EmpiricalRisks.view(θ, 1, :)
+θ1 = Base.view(θ, 1, :)
 θ2 = similar(θ1)
 @test value(reg, θ1) == Inf
-@test prox!(reg, θ2, θ1, 1.0) == [0.25 0.75]
+@test prox!(reg, θ2, θ1, 1.0) == [0.25, 0.75]
 
 
 
@@ -154,12 +154,12 @@ reg = L1BallReg(1.0)
 @test prox!(reg, θ, θ, 1.0) == [0. 0.5 ; -0.5 0]
 
 θ = [0. 0.5 ; 0.5 0.]
-θ1 = EmpiricalRisks.view(θ, :, 2)
+θ1 = Base.view(θ, :, 2)
 θ2 = similar(θ1)
 @test value(reg, θ1) == 0. 
 @test prox!(reg, θ2, θ1, 1.0) == [0.5, 0.]
 
-θ1 = EmpiricalRisks.view(θ, 1, :)
+θ1 = Base.view(θ, 1, :)
 θ2 = similar(θ1)
 @test value(reg, θ1) == 0.
-@test prox!(reg, θ2, θ1, 1.0) == [0. 0.5]
+@test prox!(reg, θ2, θ1, 1.0) == [0., 0.5]
