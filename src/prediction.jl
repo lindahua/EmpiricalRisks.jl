@@ -71,7 +71,7 @@ end
 function predict{T<:BlasReal}(pm::AffinePred, θ::StridedVector{T}, x::StridedVector{T})
     d = pm.dim
     @_checkdims length(θ) == d + 1 && length(x) == d
-    w = view(θ, 1:d)
+    w = Base.view(θ, 1:d)
     b = convert(T, pm.bias) * θ[d+1]
     dot(w, x) + b
 end
@@ -79,7 +79,7 @@ end
 function predict{T<:BlasReal}(pm::AffinePred, θ::StridedVector{T}, X::StridedMatrix{T})
     d = pm.dim
     @_checkdims length(θ) == d + 1 && size(X,1) == d
-    w = view(θ, 1:d)
+    w = Base.view(θ, 1:d)
     b = convert(T, pm.bias) * θ[d+1]
     r = X'w;
     broadcast!(+, r, r, b)
@@ -90,7 +90,7 @@ function predict!{T<:BlasReal}(r::StridedVector{T}, pm::AffinePred, θ::StridedV
     n = size(X,2)
     @_checkdims length(θ) == d + 1 && size(X,1) == d && n == length(r)
     b = convert(T, pm.bias) * θ[d+1]
-    w = view(θ, 1:d)
+    w = Base.view(θ, 1:d)
     At_mul_B!(r, X, w)
     broadcast!(+, r, r, b)
 end
@@ -167,8 +167,8 @@ function predict{T<:BlasReal}(pm::MvAffinePred, θ::StridedMatrix{T}, x::Strided
     d = pm.dim
     k = pm.k
     @_checkdims size(θ) == (k,d+1) && length(x) == d
-    W = view(θ, :, 1:d)
-    b = view(θ, :, d+1)
+    W = Base.view(θ, :, 1:d)
+    b = Base.view(θ, :, d+1)
     r = W * x
     axpy!(convert(T, pm.bias), b, r)
     r
@@ -178,12 +178,12 @@ function predict{T<:BlasReal}(pm::MvAffinePred, θ::StridedMatrix{T}, X::Strided
     d = pm.dim
     k = pm.k
     @_checkdims size(θ) == (k,d+1) && size(X,1) == d
-    W = view(θ, :, 1:d)
-    b = view(θ, :, d+1)
+    W = Base.view(θ, :, 1:d)
+    b = Base.view(θ, :, d+1)
     R = W * X
     bias = convert(T, pm.bias)
     for i = 1:size(X,2)
-        axpy!(bias, b, view(R,:,i))
+        axpy!(bias, b, Base.view(R,:,i))
     end
     R
 end
@@ -194,12 +194,12 @@ function predict!{T<:BlasReal}(r::StridedMatrix{T}, pm::MvAffinePred, θ::Stride
     n = size(X,2)
     @_checkdims size(θ) == (k,d+1) && size(X,1) == d && size(r) == (k,n)
     bias = convert(T, pm.bias)
-    W = view(θ, :, 1:d)
-    b = view(θ, :, d+1)
+    W = Base.view(θ, :, 1:d)
+    b = Base.view(θ, :, d+1)
     A_mul_B!(r, W, X)
     bias = convert(T, pm.bias)
     for i = 1:size(X,2)
-        axpy!(bias, b, view(r,:,i))
+        axpy!(bias, b, Base.view(r,:,i))
     end
     r
 end

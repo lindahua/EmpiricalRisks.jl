@@ -107,7 +107,7 @@ function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(rm::SupervisedRiskMod
     v, dv = value_and_deriv(loss, p, y)
     α_ = convert(T, α)
     β_ = convert(T, β)
-    axpby!(α_ * dv, x, β_, view(g, 1:d))
+    axpby!(α_ * dv, x, β_, Base.view(g, 1:d))
     gb = dv * convert(T, pm.bias)
     if β == zero(T)
         g[d+1] = α_ * gb
@@ -144,7 +144,7 @@ function value_and_addgrad!{T<:BlasReal,L<:UnivariateLoss}(buffer::StridedVecOrM
     end
     α_ = convert(T, α)
     β_ = convert(T, β)
-    gemv!('N', α_, x, u, β_, view(g, 1:d))
+    gemv!('N', α_, x, u, β_, Base.view(g, 1:d))
     gb = convert(T, sum(u) * pm.bias)
     if β == zero(T)
         g[d+1] = α_ * gb
@@ -192,7 +192,7 @@ function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(buffer::StridedVecO
     @assert size(u, 2) == n
     v = zero(T)
     for i = 1:n
-        u_i = view(u,:,i)
+        u_i = Base.view(u,:,i)
         v_i, _ = value_and_grad!(loss, u_i, u_i, gets(y,i))
         v += v_i
     end
@@ -215,8 +215,8 @@ function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(rm::SupervisedRiskM
     d = inputlen(pm)
     α_ = convert(T, α)
     β_ = convert(T, β)
-    gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
-    axpby!(convert(T, α_ * pm.bias), u, β_, view(g, :, d+1))
+    gemm!('N', 'T', α_, u, x, β_, Base.view(g, :, 1:d))
+    axpby!(convert(T, α_ * pm.bias), u, β_, Base.view(g, :, d+1))
     (α_ * v, g)
 end
 
@@ -240,14 +240,14 @@ function value_and_addgrad!{T<:BlasReal,L<:MultivariateLoss}(buffer::StridedVecO
     @assert size(u, 2) == n
     v = zero(T)
     for i = 1:n
-        u_i = view(u,:,i)
+        u_i = Base.view(u,:,i)
         v_i, _ = value_and_grad!(loss, u_i, u_i, gets(y,i))
         v += v_i
     end
     d = inputlen(pm)
     α_ = convert(T, α)
     β_ = convert(T, β)
-    gemm!('N', 'T', α_, u, x, β_, view(g, :, 1:d))
-    axpby!(convert(T, α_ * pm.bias), vec(sum(u,2)), β_, view(g, :, d+1))
+    gemm!('N', 'T', α_, u, x, β_, Base.view(g, :, 1:d))
+    axpby!(convert(T, α_ * pm.bias), vec(sum(u,2)), β_, Base.view(g, :, d+1))
     (α_ * v, g)
 end

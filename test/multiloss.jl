@@ -1,6 +1,6 @@
 using EmpiricalRisks
 using Base.Test
-using DualNumbers
+import DualNumbers
 
 ### Auxiliary functions
 
@@ -22,11 +22,11 @@ function verify_multiloss(loss::MultivariateLoss, f, u::Vector{Float64}, y)
     for i = 1:d
         _ep = zeros(d)
         _ep[i] = 1.0
-        _in = dual(u, _ep)
+        _in = DualNumbers.dual(u, _ep)
         _out = f(_in, y)
-        @assert isa(_out, Dual{Float64})
-        @assert isapprox(v_r, real(_out))
-        g_r[i] = epsilon(_out)
+        @assert isa(_out, DualNumbers.Dual{Float64})
+        @assert isapprox(v_r, DualNumbers.realpart(_out))
+        g_r[i] = DualNumbers.epsilon(_out)
     end
 
     # verify
