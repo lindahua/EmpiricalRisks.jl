@@ -219,6 +219,71 @@ function value_and_deriv{T<:BlasReal}(loss::SmoothedHingeLoss, p::T, y::T)
 end
 
 
+## Quadratically smoothed Hinge loss
+#
+#   loss(p, y) := 1/(2γ) * max(1 - y * p, 0)^2   ... y * p >= 1 - γ
+#                 1 - γ / 2 - p * y              ... otherwise
+#
+#  Reference
+#
+#   Zhang, Tong (2004). Solving large scale linear prediction problems using stochastic gradient descent algorithms. ICML.
+#
+immutable SqrSmoothedHingeLoss <: UnivariateLoss
+    gamma::Float64
+
+    function SqrSmoothedHingeLoss(gamma::Real)
+        gamma > zero(gamma) || error("gamma must be a positive value.")
+        new(convert(Float64, gamma))
+    end
+end
+
+function value{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    yp >= one(T) - g ? half(abs2(nonneg(one(T) - yp)) / g) : one(T) - half(g) - yp
+end
+
+function deriv{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    yp >= one(T) - g ? (yp < one(T) ? (p - y) / g : zero(T)) : -y
+end
+
+function value_and_deriv{T<:BlasReal}(loss::SqrSmoothedHingeLoss, p::T, y::T)
+    g = convert(T, loss.gamma)
+    yp = y * p
+    val = yp >= one(T) - g ? half(abs2(nonneg(one(T) - yp)) / g) : one(T) - half(g) - yp
+    der = yp >= one(T) - g ? (yp < one(T) ? (p - y) / g : zero(T)) : -y
+    (val, der)
+end
+
+
+## Modified Huber loss
+#
+#   loss(p, y) := max(1 - y * p, 0)^2   ... y * p >= -1
+#                 -4 * p * y            ... otherwise
+#
+immutable ModifiedHuberLoss <: UnivariateLoss
+end
+
+function value{T<:BlasReal}(::ModifiedHuberLoss, p::T, y::T)
+    yp = y * p
+    yp >= -one(T) ? abs2(nonneg(one(T) - yp)) : -4yp
+end
+
+function deriv{T<:BlasReal}(::ModifiedHuberLoss, p::T, y::T)
+    yp = y * p
+    yp >= -one(T) ? (yp < one(T) ? 2(p - y) : zero(T)) : -4y
+end
+
+function value_and_deriv{T<:BlasReal}(::ModifiedHuberLoss, p::T, y::T)
+    yp = y * p
+    val = yp >= -one(T) ? abs2(nonneg(one(T) - yp)) : -4yp
+    der = yp >= -one(T) ? (yp < one(T) ? 2(p - y) : zero(T)) : -4y
+    (val, der)
+end
+
+
 ## Logistic loss (for logistic regression)
 #
 #   loss(p, y) := log(1 + exp(-y * p))
