@@ -3,7 +3,7 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 0.4
   # - nightly   # temporarily disable this, until the tuple stuff is sorted out
 notifications:
   email: false
