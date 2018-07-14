@@ -8,9 +8,7 @@ nonneg(x::Float64) = x < 0.0 ? 0.0 : x  # this also properly takes care of NaN
 nonneg(x::Float32) = x < 0.0f0 ? 0.0f0 : x
 
 macro _checkdims(cond)
-    quote
-        ($cond) || throw(DimensionMismatch())
-    end
+  return :($(esc(cond)) || throw(DimensionMismatch()))
 end
 
 function axpby!{T<:BlasReal}(a::T, x::StridedVector{T}, b::T, y::StridedVector{T})
